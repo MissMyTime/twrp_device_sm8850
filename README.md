@@ -97,9 +97,13 @@ See [docs/PATCHES.md](docs/PATCHES.md) for detailed descriptions.
 - **UI/Theme adjustments**: Language strings, layout, status bar positioning for center punch-hole devices.
 - **Partition handling**: Virtual A/B alias support, dynamic partition flashing fixes.
 - **Wi-Fi support** (myron/Neo8): Recovery Wi-Fi framework, supplicant, DHCP client.
+- **ST54 null pointer crash fix** (`partition.cpp`, `gui.cpp`): Fixes nullptr crash when initializing ST54 secure element on neZha (Xiaomi 17 Ultra) devices.
+- **SELog guard fix**: Suppresses spurious SELinux denials for ST54 DAC access during recovery boot, prevents early boot hangs.
 
 ### system/vold
 - **FBE / Weaver compatibility**: Android 16 FBE decryption and Weaver/Keymaster compatibility.
+- **ST54 key storage safety patch** (`KeyStorage.cpp`, `Decrypt.cpp`): Adds null checks and safety guards for ST54 weaver key access, fixes decryption failures on neZha devices.
+- **Thales weaver recovery support**: Adds userspace helper for Thales strongbox keymint/weaver service used on Xiaomi SM8850 neZha.
 
 ## Device-specific Notes
 
