@@ -1,6 +1,6 @@
 # SM8850 TWRP Device Trees & Source Changes
-[![酷安](https://img.shields.io/badge/酷安-主页-green)](https://www.coolapk.com/u/4327352)
-[![讨论区](https://img.shields.io/badge/讨论区-Discussions-orange)](https://github.com/MissMyTime/twrp_device_sm8850/discussions)
+[![酷安](https://img.shields.io/badge/酷安-主页-green?logo=coolapk&logoColor=white)](https://www.coolapk.com/u/4327352)
+[![讨论区](https://img.shields.io/badge/讨论区-Discussions-orange?logo=github&logoColor=white)](https://github.com/MissMyTime/twrp_device_sm8850/discussions)
 
 TWRP device trees and source changes for Qualcomm SM8850 (canoe) platform devices.
 **Android 16 / API 36 / BP2A / Virtual A/B**
