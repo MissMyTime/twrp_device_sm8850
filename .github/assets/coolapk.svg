@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="36">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop stop-color="#16a34a"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="158" height="34" rx="8" fill="url(#bg)">
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="1.6s" repeatCount="indefinite"/>
+  </rect>
+  <text x="28" y="23" fill="#fff" font-size="15" font-weight="600" font-family="system-ui,Microsoft YaHei">🎉 酷安 主页</text>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="36">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop stop-color="#0390fc"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="light">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="cut">
+      <rect width="220" height="36" rx="8"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#cut)">
+    <rect width="220" height="36" fill="url(#bg)"/>
+    <rect x="-80" y="0" width="60" height="36" fill="url(#light)" transform="skewX(-20)">
+      <animate attributeName="x" values="-80;300" dur="2.4s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <text x="24" y="23" fill="#fff" font-size="15" font-weight="600" font-family="system-ui,Microsoft YaHei">💬 讨论区 Discussions</text>
+</svg>
