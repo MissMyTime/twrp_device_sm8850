@@ -20,25 +20,6 @@ wait_running() {
     return 1
 }
 
-wait_stable_running() {
-    name="$1"
-    stable_needed="$2"
-    limit="$3"
-    stable=0
-    i=0
-    while [ "$i" -lt "$limit" ]; do
-        if [ "$(getprop "init.svc.$name")" = "running" ]; then
-            stable=$((stable + 1))
-            [ "$stable" -ge "$stable_needed" ] && return 0
-        else
-            stable=0
-        fi
-        sleep 1
-        i=$((i + 1))
-    done
-    return 1
-}
-
 setprop twrp.myron.nxp_gate_started 1
 setprop twrp.myron.nxp_gate_error ""
 setprop twrp.myron.nxp_gate_attempt 0
@@ -61,15 +42,11 @@ if ! wait_running se_omapi 30; then
     exit 0
 fi
 
-if wait_stable_running odm.weaver_nxp 2 3; then
-    setprop twrp.myron.weaver_ready 1
-    log_msg "weaver_nxp already stable; strongbox kept stopped in recovery"
-    exit 0
-fi
-
-stop odm.weaver_nxp
-sleep 1
+# odm.weaver_nxp is a disabled service, so waiting before its first start only
+# adds a fixed timeout. Start it as soon as its transport dependencies are up,
+# then require two consecutive running samples before allowing decryption.
 start odm.weaver_nxp
+
 i=0
 stable=0
 while [ "$i" -lt 10 ]; do
@@ -82,7 +59,7 @@ while [ "$i" -lt 10 ]; do
     fi
     if [ "$stable" -ge 2 ]; then
         setprop twrp.myron.weaver_ready 1
-        log_msg "weaver_nxp stable after restart; strongbox kept stopped in recovery"
+        log_msg "weaver_nxp stable; strongbox kept stopped in recovery"
         exit 0
     fi
     sleep 1

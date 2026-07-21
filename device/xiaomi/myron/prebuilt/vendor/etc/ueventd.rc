@@ -1,1 +1,5 @@
 /dev/0:0:0:49476          0600   system     system
+/dev/dma_heap/qcom,*      0444   system     system
+/dev/qseecom              0660   system     drmrpc
+/dev/smcinvoke            0660   system     drmrpc
+/dev/qsee_ipc_irq_spss    0660   system     drmrpc
