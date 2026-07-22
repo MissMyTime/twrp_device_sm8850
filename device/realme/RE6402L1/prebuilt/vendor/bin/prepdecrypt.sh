@@ -396,7 +396,7 @@ if [ "$sdkver" -ge 26 ]; then
 					log_print 2 "Current Vendor Security Patch Level: $venpatchlevel"
 				venpatchlevel_device=$(grep -i -m 1 'ro.vendor.build.security_patch=' "$TEMPVEN/$BUILDPROP"  | cut -f2 -d'=' -s)
 				if [ -n "$venpatchlevel_device" ]; then
-					$setprop_bin twrp.neo8.venpatch "$venpatchlevel_device"
+					$setprop_bin twrp.keymint.venpatch "$venpatchlevel_device"
 					log_print 1 "Saved device vendor patch for adaptive KeyMint: $venpatchlevel_device"
 				fi
 					if ! [ "$venpatchlevel" = "venpatchlevel_device" ]; then
@@ -450,7 +450,7 @@ if [ "$sdkver" -ge 26 ]; then
 				log_print 2 "Current OS Version: $osver"
 				osver=$(grep -i -m 1 'ro.build.version.release=' "$TEMPSYS/$BUILDPROP"  | cut -f2 -d'=' -s)
 				if [ -n "$osver" ]; then
-					$setprop_bin twrp.neo8.osver "$osver"
+					$setprop_bin twrp.keymint.osver "$osver"
 					log_print 1 "Saved device OS version for adaptive KeyMint: $osver"
 					$setprop_bin "ro.build.version.release" "$osver"
 					sed -i "s/ro.build.version.release=.*/ro.build.version.release=""$osver""/g" "/$DEFAULTPROP" ;
@@ -470,7 +470,7 @@ if [ "$sdkver" -ge 26 ]; then
 				log_print 2 "Current Security Patch Level: $patchlevel"
 				patchlevel=$(grep -i -m 1 'ro.build.version.security_patch=' "$TEMPSYS/$BUILDPROP"  | cut -f2 -d'=' -s)
 				if [ -n "$patchlevel" ]; then
-					$setprop_bin twrp.neo8.ospatch "$patchlevel"
+					$setprop_bin twrp.keymint.ospatch "$patchlevel"
 					log_print 1 "Saved device OS patch for adaptive KeyMint: $patchlevel"
 					$setprop_bin "ro.build.version.security_patch" "$patchlevel"
 					sed -i "s/ro.build.version.security_patch=.*/ro.build.version.security_patch=""$patchlevel""/g" "/$DEFAULTPROP" ;
