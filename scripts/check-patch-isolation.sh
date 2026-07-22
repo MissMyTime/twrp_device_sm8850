@@ -112,6 +112,15 @@ while IFS= read -r patch; do
     git apply --numstat "$patch" >/dev/null
 done < <(find "$REPO_ROOT/patches" -type f -name '*.patch' -print)
 
+if grep -nE 'LOCAL_MODULE[[:space:]]*:=[[:space:]]*recovery-(persist|refresh)' \
+        "$REPO_ROOT/patches/common/files/bootable/recovery/Android.mk"; then
+    fail "recovery-persist/recovery-refresh must remain owned by Android 16 Soong"
+fi
+
+grep -q '^+99\.87\.36$' \
+    "$REPO_ROOT/patches/myron/patches/cts/platform_release.patch" || \
+    fail "Myron CTS platform release compatibility is missing"
+
 if grep -RniE 'recovery_ab|^[[:space:]]*fastboot[[:space:]]+(flash[[:space:]]+recovery[[:space:]]|boot[[:space:]]+recovery\.img)' \
         "$REPO_ROOT" --include='*.md' --include='*.sh' \
         --exclude='check-patch-isolation.sh' \

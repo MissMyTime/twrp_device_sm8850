@@ -1,0 +1,9 @@
+diff --git a/tests/tests/os/assets/platform_releases.txt b/tests/tests/os/assets/platform_releases.txt
+index 3f2e0ad..d6e7528 100644
+--- a/tests/tests/os/assets/platform_releases.txt
++++ b/tests/tests/os/assets/platform_releases.txt
+@@ -1,3 +1,4 @@
+ 14
+ 15
+ 16
++99.87.36
