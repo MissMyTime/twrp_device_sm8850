@@ -3,5 +3,17 @@
 
 permissive recovery;
 permissive hal_vibrator_default;
+permissive adbd;
+permissive fastbootd;
+permissive init;
+permissive logd;
+permissive postinstall;
+permissive ueventd;
 
 hal_client_domain(recovery, hal_vibrator)
+
+allow kernel recovery:fd use;
+allow kernel unlabeled:file { ioctl read write getattr lock append map open watch watch_reads };
+allow logd rootfs:file entrypoint;
+allow unlabeled self:filesystem associate;
+allow vendor_init rootfs:dir read;
