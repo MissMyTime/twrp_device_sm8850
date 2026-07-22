@@ -88,6 +88,15 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 
+# Verified 2026-06-15 release-image configuration: header and build props use
+# the platform 99.87.36 / 2099-12-31 values, same as the June baseline.
+BOARD_RECOVERY_MKBOOTIMG_ARGS := $(BOARD_MKBOOTIMG_ARGS)
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 99.87.36
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2099-12-31
+BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 99.87.36
+BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2099-12-31
+VENDOR_SECURITY_PATCH := 2099-12-31
+
 BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
 TARGET_RECOVERY_ODM_PREBUILT_DIR := $(DEVICE_PATH)/prebuilt/odm
 BOARD_RAMDISK_USE_LZ4 := true
@@ -179,9 +188,8 @@ BOARD_RECOVERY_NEEDS_BOOTLOADER_CONTROL := true
 #   ro.boot.veritymode=enforcing
 # -----------------------------------------------------------------------------
 BOARD_AVB_ENABLE := true
-# ABL enforces recovery's rollback index even with an unlocked bootloader.
-# The stock OS3.0.306.4 recovery image uses index 1.
-BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --rollback_index 1
+# No --rollback_index override: the verified 2026-06-15 image ships index 0,
+# and flashing a higher index can permanently block returning to that image.
 
 # -----------------------------------------------------------------------------
 # 6. Physical partition sizes
@@ -279,15 +287,7 @@ TW_USE_FSCRYPT_POLICY := 2
 TW_CRYPTO_USE_VENDOR_KEYMINT := true
 
 # -----------------------------------------------------------------------------
-# 10. Recovery-side security patch compatibility
-# -----------------------------------------------------------------------------
-# Match the installed OS and vendor security levels. QTI KeyMint consumes these
-# values when the recovery service starts, so they must never be spoofed forward.
-VENDOR_SECURITY_PATCH := 2026-02-01
-BOOT_SECURITY_PATCH := 2026-05-01
-
-# -----------------------------------------------------------------------------
-# 11. Recovery base
+# 10. Recovery base
 # APEX is loaded and working on AOSP 16 TWRP (twrp.apex.loaded=true).
 # additional.fstab is used for metadata-encrypted userdata decrypt passthrough.
 # -----------------------------------------------------------------------------

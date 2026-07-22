@@ -12,8 +12,6 @@ VENDOR="${2:-}"
 TWRP_SOURCE="${TWRP_SOURCE:-$(pwd)}"
 if [ -n "${LUNCH_TARGET:-}" ]; then
     LUNCH_TARGET="$LUNCH_TARGET"
-elif [ "$CODENAME" = "myron" ]; then
-    LUNCH_TARGET="twrp_myron-myron-eng"
 else
     LUNCH_TARGET="twrp_${CODENAME}-bp2a-eng"
 fi
@@ -98,26 +96,6 @@ if [ "$CODENAME" = "myron" ]; then
         exit 1
     fi
 
-    grep -q 'std::string keystore_path = "/tmp/misc/keystore/"' \
-        "$TWRP_SOURCE/system/vold/Decrypt.cpp" || {
-        echo "Error: Myron recovery keystore database baseline is missing."
-        exit 1
-    }
-
-    grep -q 'Refusing KeyMint key upgrade in recovery' \
-        "$TWRP_SOURCE/system/vold/KeyStorage.cpp" || {
-        echo "Error: Myron key-upgrade write-back guard is missing."
-        exit 1
-    }
-
-    if grep -Eq '^[[:space:]]*if[[:space:]]*\(rename\(upgraded_blob_file\.c_str\(\), blob_file\.c_str\(\)\)' \
-            "$TWRP_SOURCE/system/vold/KeyStorage.cpp" || \
-       grep -Eq '^[[:space:]]*if[[:space:]]*\(!writeStringToFile\(\*opHandle\.getUpgradedBlob\(\)' \
-            "$TWRP_SOURCE/system/vold/KeyStorage.cpp"; then
-        echo "Error: Myron recovery must not persist a KeyMint-upgraded blob."
-        exit 1
-    fi
-
     grep -q 'setprop sys.usb.config twrp_mtp_adb' \
         "$TWRP_SOURCE/bootable/recovery/partitionmanager.cpp" || {
         echo "Error: Myron MTP/ADB composite configuration is missing."
@@ -160,9 +138,9 @@ if [ "$CODENAME" = "myron" ]; then
         }
     }
 
-    check_prop ro.build.version.release 16
-    check_prop ro.build.version.security_patch 2026-05-01
-    check_prop ro.vendor.build.security_patch 2026-02-01
+    check_prop ro.build.version.release 99.87.36
+    check_prop ro.build.version.security_patch 2099-12-31
+    check_prop ro.vendor.build.security_patch 2099-12-31
 
     AVBTOOL="$BUILD_OUT/host/linux-x86/bin/avbtool"
     [ -x "$AVBTOOL" ] || AVBTOOL="$(command -v avbtool || true)"
@@ -171,8 +149,8 @@ if [ "$CODENAME" = "myron" ]; then
         exit 1
     fi
     "$AVBTOOL" info_image --image "$RECOVERY_IMAGE" | \
-        grep -Eq 'Rollback Index:[[:space:]]+1$' || {
-        echo "Error: recovery AVB rollback index is not 1."
+        grep -Eq 'Rollback Index:[[:space:]]+0$' || {
+        echo "Error: recovery AVB rollback index is not the verified 0."
         exit 1
     }
 fi

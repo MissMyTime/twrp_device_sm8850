@@ -1,4 +1,0 @@
-name: "RELEASE_PLATFORM_VERSION_LAST_STABLE"
-value {
-  string_value: "16"
-}

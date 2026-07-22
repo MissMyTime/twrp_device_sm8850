@@ -5,8 +5,6 @@
 
 DEVICE_PATH := device/xiaomi/myron
 
-PRODUCT_RELEASE_CONFIG_MAPS += $(DEVICE_PATH)/release/release_config_map.textproto
-
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)

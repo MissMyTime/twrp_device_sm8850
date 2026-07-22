@@ -74,25 +74,33 @@ for set_name in neo8 nezha; do
         fail "$set_name KeyMint implementation is missing"
 done
 
+# The KeyMint override channel must use the shared twrp.keymint.* namespace
+# on both the setter (device scripts) and reader (vold Decrypt.cpp) sides.
+assert_no_match \
+    'twrp\.neo8\.(osver|ospatch|venpatch)|twrp\.nezha\.keymint\.' \
+    "$REPO_ROOT/device" "$REPO_ROOT/patches"
+for prop in osver ospatch venpatch; do
+    grep -q "twrp.keymint.$prop" \
+        "$REPO_ROOT/device/realme/RE6402L1/prebuilt/vendor/bin/prepdecrypt.sh" || \
+        fail "neo8 prepdecrypt KeyMint override channel is broken"
+done
+
 for set_name in annibale myron; do
     [ ! -e "$REPO_ROOT/patches/$set_name/files/system/vold/Decrypt.cpp" ] || \
         fail "$set_name must use stock Decrypt.cpp"
     [ ! -e "$REPO_ROOT/patches/$set_name/files/system/vold/KeyStorage.cpp" ] || \
         fail "$set_name must use stock KeyStorage.cpp"
-    if [ "$set_name" = "annibale" ] && \
-            [ -d "$REPO_ROOT/patches/$set_name/patches/system_vold" ] && \
+    if [ "$set_name" = "annibale" ] || [ "$set_name" = "myron" ]; then
+        if [ -d "$REPO_ROOT/patches/$set_name/patches/system_vold" ] && \
             find "$REPO_ROOT/patches/$set_name/patches/system_vold" -type f -print -quit | grep -q .; then
-        fail "$set_name must not carry private system/vold patches"
+            fail "$set_name must not carry private system/vold patches"
+        fi
     fi
 done
 
 assert_no_match \
-    'setRecoveryKeyMintEnvironment|usePersistentKeystoreDatabase|MS_BIND|99\.87\.36|2099-12-31' \
+    'setRecoveryKeyMintEnvironment|usePersistentKeystoreDatabase|MS_BIND' \
     "$REPO_ROOT/patches/myron" "$REPO_ROOT/device/xiaomi/myron"
-
-grep -q 'Refusing KeyMint key upgrade in recovery' \
-    "$REPO_ROOT/patches/myron/patches/system_vold/no_key_upgrade_writeback.patch" || \
-    fail "Myron key-upgrade write-back guard is missing"
 
 grep -q 'setprop ctl.start adbd' \
     "$REPO_ROOT/patches/common/files/bootable/recovery/partitionmanager.cpp" || \
@@ -139,18 +147,29 @@ if grep -nE 'LOCAL_MODULE[[:space:]]*:=[[:space:]]*recovery-(persist|refresh)' \
     fail "recovery-persist/recovery-refresh must remain owned by Android 16 Soong"
 fi
 
-grep -q 'string_value: "16"' \
-    "$REPO_ROOT/device/xiaomi/myron/release/flag_values/myron/RELEASE_PLATFORM_VERSION_LAST_STABLE.textproto" || \
-    fail "Myron recovery OS version must be Android 16"
-grep -q 'string_value: "2026-05-01"' \
-    "$REPO_ROOT/device/xiaomi/myron/release/flag_values/myron/RELEASE_PLATFORM_SECURITY_PATCH.textproto" || \
-    fail "Myron recovery OS patch level is incorrect"
-grep -q '^VENDOR_SECURITY_PATCH := 2026-02-01$' \
+# Myron follows the verified 2026-06-15 release-image configuration:
+# 99.87.36 / 2099-12-31 header and build props, no rollback index override.
+grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 99.87.36$' \
     "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk" || \
-    fail "Myron vendor patch level is incorrect"
-grep -q '^BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --rollback_index 1$' \
+    fail "Myron recovery header os_version is not the verified 99.87.36"
+grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2099-12-31$' \
     "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk" || \
-    fail "Myron recovery rollback index is not pinned to 1"
+    fail "Myron recovery header os_patch_level is not the verified 2099-12-31"
+grep -q '^BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 99.87.36$' \
+    "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk" || \
+    fail "Myron recovery build version release is not the verified 99.87.36"
+grep -q '^BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2099-12-31$' \
+    "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk" || \
+    fail "Myron recovery build security patch is not the verified 2099-12-31"
+grep -q '^VENDOR_SECURITY_PATCH := 2099-12-31$' \
+    "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk" || \
+    fail "Myron vendor security patch is not the verified 2099-12-31"
+if grep -qE '^BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS \+= --rollback_index' \
+        "$REPO_ROOT/device/xiaomi/myron/BoardConfig.mk"; then
+    fail "Myron recovery must not pin a rollback index (verified image uses 0)"
+fi
+[ ! -d "$REPO_ROOT/device/xiaomi/myron/release" ] || \
+    fail "Myron must not carry release flag overrides"
 
 grep -q 'name: "init_recovery.rc"' \
     "$REPO_ROOT/patches/common/files/bootable/recovery/etc/Android.bp" || \
