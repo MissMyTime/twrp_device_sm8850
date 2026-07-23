@@ -151,6 +151,10 @@ See [PATCHES.md](docs/PATCHES.md) for details. The Patch isolation workflow chec
 - [Xiaomi 17 Ultra / nezha](docs/xiaomi-nezha.md)
 - [realme Neo8 / RE6402L1](docs/realme-neo8.md)
 
+## Unbricking
+
+If the system boots to the launcher but every app says "not responding, wait after reboot" (the lock-screen key blob is dead and /data cannot be decrypted), don't wipe data yet. Try [spblob-rescue](https://github.com/MissMyTime/spblob-rescue): run it in recovery to switch the lock-screen key to the backup one, reboot, unlock once with your normal password and your data is back.
+
 ## Discussion and feedback
 
 - XDA: [POCO F8 Ultra / Redmi K90 Pro Max (myron)](https://xdaforums.com/t/twrp-3-7-1-for-poco-f8-ultra-redmi-k90-pro-max-myron-android-16-fbe-decrypt.4795272/)

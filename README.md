@@ -152,6 +152,10 @@ twrp_device_sm8850/
 - [Xiaomi 17 Ultra / nezha](docs/xiaomi-nezha.md)
 - [realme Neo8 / RE6402L1](docs/realme-neo8.md)
 
+## 救砖
+
+如果系统能进桌面、但所有应用提示"重启后需等待应用响应"（锁屏钥匙失效导致 /data 解不开），先别急着格式化 data。试试 [spblob-rescue](https://github.com/MissMyTime/spblob-rescue)：在 recovery 里跑一下，把锁屏钥匙切到备用的那把，重启输原来的密码就能解开，数据都在。
+
 ## 讨论与反馈
 
 - XDA: [POCO F8 Ultra / Redmi K90 Pro Max (myron)](https://xdaforums.com/t/twrp-3-7-1-for-poco-f8-ultra-redmi-k90-pro-max-myron-android-16-fbe-decrypt.4795272/)
