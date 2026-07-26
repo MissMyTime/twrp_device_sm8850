@@ -219,6 +219,12 @@ start_wifi_hal() {
         echo "missing Wi-Fi HAL service: $hal"
         return 1
     fi
+    # PRODUCT_COPY_FILES can flatten executable prebuilts to 0644 in the
+    # recovery ramdisk. Restore the helper mode before testing it.
+    if [ -f "$client" ] && [ ! -x "$client" ]; then
+        chmod 0755 "$client" 2>/dev/null || \
+            echo "failed to restore execute permission on Wi-Fi HAL client"
+    fi
     if [ ! -x "$client" ]; then
         echo "missing Wi-Fi HAL client: $client"
         return 1

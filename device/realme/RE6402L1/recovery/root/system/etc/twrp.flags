@@ -5,19 +5,27 @@
 /vendor_dlkm    ext4    vendor_dlkm                                                         flags=display=Vendor_DLKM
 
 # Userdata/Metadata partitions
-/metadata       f2fs    /dev/block/by-name/metadata                                         flags=display="Metadata";backup=1
+/metadata       f2fs    /dev/block/by-name/metadata                                         flags=display="Metadata";backup=1;flashimg=1
 
 # Boot partitions
-/boot           emmc    /dev/block/bootdevice/by-name/boot                                  flags=display="Boot";backup=1;flashimg=1
-/init_boot      emmc    /dev/block/bootdevice/by-name/init_boot                             flags=display="Init Boot";backup=1;flashimg=1
-/vendor_boot    emmc    /dev/block/bootdevice/by-name/vendor_boot                           flags=display="Vendor Boot";backup=1;flashimg=1
-/recovery       emmc    /dev/block/bootdevice/by-name/recovery                              flags=display="Recovery";backup=1;flashimg=1
-/dtbo           emmc    /dev/block/bootdevice/by-name/dtbo                                  flags=display="DTBO";backup=1;flashimg=1
+/boot_a         emmc    /dev/block/bootdevice/by-name/boot_a                                flags=display="Boot A";backup=1;flashimg=1
+/boot_b         emmc    /dev/block/bootdevice/by-name/boot_b                                flags=display="Boot B";backup=1;flashimg=1
+/init_boot_a    emmc    /dev/block/bootdevice/by-name/init_boot_a                           flags=display="Init Boot A";backup=1;flashimg=1
+/init_boot_b    emmc    /dev/block/bootdevice/by-name/init_boot_b                           flags=display="Init Boot B";backup=1;flashimg=1
+/vendor_boot_a  emmc    /dev/block/bootdevice/by-name/vendor_boot_a                         flags=display="Vendor Boot A";backup=1;flashimg=1
+/vendor_boot_b  emmc    /dev/block/bootdevice/by-name/vendor_boot_b                         flags=display="Vendor Boot B";backup=1;flashimg=1
+/recovery_a     emmc    /dev/block/bootdevice/by-name/recovery_a                            flags=display="Recovery A";backup=1;flashimg=1
+/recovery_b     emmc    /dev/block/bootdevice/by-name/recovery_b                            flags=display="Recovery B";backup=1;flashimg=1
+/dtbo_a         emmc    /dev/block/bootdevice/by-name/dtbo_a                                flags=display="DTBO A";backup=1;flashimg=1
+/dtbo_b         emmc    /dev/block/bootdevice/by-name/dtbo_b                                flags=display="DTBO B";backup=1;flashimg=1
 
 # AVB partitions
-/vbmeta         emmc    /dev/block/bootdevice/by-name/vbmeta                                flags=display="VBMeta";backup=1;flashimg=1
-/vbmeta_system  emmc    /dev/block/bootdevice/by-name/vbmeta_system                         flags=display="VBMeta System";backup=1;flashimg=1
-/vbmeta_vendor  emmc    /dev/block/bootdevice/by-name/vbmeta_vendor                         flags=display="VBMeta Vendor";backup=1;flashimg=1
+/vbmeta_a         emmc  /dev/block/bootdevice/by-name/vbmeta_a                              flags=display="VBMeta A";backup=1;flashimg=1
+/vbmeta_b         emmc  /dev/block/bootdevice/by-name/vbmeta_b                              flags=display="VBMeta B";backup=1;flashimg=1
+/vbmeta_system_a  emmc  /dev/block/bootdevice/by-name/vbmeta_system_a                       flags=display="VBMeta System A";backup=1;flashimg=1
+/vbmeta_system_b  emmc  /dev/block/bootdevice/by-name/vbmeta_system_b                       flags=display="VBMeta System B";backup=1;flashimg=1
+/vbmeta_vendor_a  emmc  /dev/block/bootdevice/by-name/vbmeta_vendor_a                       flags=display="VBMeta Vendor A";backup=1;flashimg=1
+/vbmeta_vendor_b  emmc  /dev/block/bootdevice/by-name/vbmeta_vendor_b                       flags=display="VBMeta Vendor B";backup=1;flashimg=1
 
 # Persistent Firmware & Properties
 /firmware       vfat    /dev/block/bootdevice/by-name/modem                                 flags=slotselect;display="Firmware";mounttodecrypt;fsflags="ro,shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0"

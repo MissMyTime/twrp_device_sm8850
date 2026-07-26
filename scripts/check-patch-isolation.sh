@@ -175,6 +175,38 @@ grep -q 'name: "init_recovery.rc"' \
     "$REPO_ROOT/patches/common/files/bootable/recovery/etc/Android.bp" || \
     fail "Android 16 recovery init.rc install rule is missing"
 
+neo8_flags="$REPO_ROOT/device/realme/RE6402L1/recovery/root/system/etc/twrp.flags"
+for partition in \
+    boot_a boot_b init_boot_a init_boot_b vendor_boot_a vendor_boot_b \
+    recovery_a recovery_b dtbo_a dtbo_b vbmeta_a vbmeta_b \
+    vbmeta_system_a vbmeta_system_b vbmeta_vendor_a vbmeta_vendor_b; do
+    grep -q "^/$partition[[:space:]].*/dev/block/bootdevice/by-name/$partition[[:space:]]" \
+        "$neo8_flags" || \
+        fail "Neo8 image target is missing: $partition"
+done
+if grep -qE '^/(boot|init_boot|vendor_boot|recovery|dtbo|vbmeta|vbmeta_system|vbmeta_vendor)[[:space:]]' \
+        "$neo8_flags"; then
+    fail "Neo8 image targets must use physical A/B partition nodes"
+fi
+if grep -qE '^/super[[:space:]]' "$neo8_flags"; then
+    fail "Neo8 twrp.flags must not duplicate the dynamic super entry"
+fi
+
+grep -q 'property.ro.boot.slot_suffix' \
+    "$REPO_ROOT/patches/neo8/patches/bootable_recovery/ui_device_overrides.patch" || \
+    fail "Neo8 slot-suffix display fallback is missing"
+grep -q 'property.ro.boot.slot' \
+    "$REPO_ROOT/patches/neo8/patches/bootable_recovery/ui_device_overrides.patch" || \
+    fail "Neo8 slot display fallback is missing"
+
+neo8_wifi_loader="$REPO_ROOT/device/realme/RE6402L1/prebuilt/sbin/wifi-load-modules.sh"
+grep -q 'chmod 0755 "$client"' "$neo8_wifi_loader" || \
+    fail "Neo8 Wi-Fi HAL client mode repair is missing"
+git -C "$REPO_ROOT" ls-files -s \
+        device/realme/RE6402L1/prebuilt/sbin/neo8_wifi_hal_client | \
+    grep -q '^100755 ' || \
+    fail "Neo8 Wi-Fi HAL client must be executable in Git"
+
 if grep -RniE 'recovery_ab|^[[:space:]]*fastboot[[:space:]]+(flash[[:space:]]+recovery[[:space:]]|boot[[:space:]]+recovery\.img)' \
         "$REPO_ROOT" --include='*.md' --include='*.sh' \
         --exclude='check-patch-isolation.sh' \

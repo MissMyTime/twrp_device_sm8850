@@ -11,8 +11,8 @@
 - `files/system/vold/Decrypt.cpp`：KeyMint 环境压制、persist 兼容挂载、TMS Weaver 重启与 keystore2 同步。
 - `files/system/vold/KeyStorage.cpp`：`KM_TAG_FBE_ICE` 与升级写回保护。
 - `files/bootable/recovery/`：Neo8 专用 DRM、init 与主题构建覆盖。
-- `patches/bootable_recovery/mtp_composite.patch`：Neo8 专用的标准 `mtp,adb` configfs 切换。
-- `patches/bootable_recovery/ui_device_overrides.patch`：Neo8 的直接重启、WLAN 布局和动态 system 大小规则。
+- MTP 使用公共补丁中的标准 `mtp,adb` configfs 路径，不加载 Myron 的专用组合模式。
+- `patches/bootable_recovery/ui_device_overrides.patch`：Neo8 的直接重启、槽位属性回填、WLAN 布局和动态 system 大小规则。
 - `patches/system_vold/key_storage_recovery_safety.patch`：KeyStorage 改动的 diff 形式。
 
 这些文件只由 `RE6402L1` / `neo8` 构建应用，不进入 myron、annibale 或 nezha。

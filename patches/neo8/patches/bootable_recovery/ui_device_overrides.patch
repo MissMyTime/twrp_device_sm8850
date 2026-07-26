@@ -14,6 +14,47 @@ index 2a77a3a..8ae0aea 100644
 diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 --- a/gui/theme/common/portrait.xml
 +++ b/gui/theme/common/portrait.xml
+@@ -175,6 +175,40 @@
+ 
+ 	<pages>
+ 		<page name="main">
++			<!-- Fall back to the boot properties when the slot backend has
++			     not populated the GUI variable yet. -->
++			<action>
++				<conditions>
++					<condition var1="tw_active_slot" op="!=" var2="A"/>
++					<condition var1="tw_active_slot" op="!=" var2="B"/>
++					<condition var1="property.ro.boot.slot_suffix" var2="_a"/>
++				</conditions>
++				<action function="set">tw_active_slot=A</action>
++			</action>
++			<action>
++				<conditions>
++					<condition var1="tw_active_slot" op="!=" var2="A"/>
++					<condition var1="tw_active_slot" op="!=" var2="B"/>
++					<condition var1="property.ro.boot.slot_suffix" var2="_b"/>
++				</conditions>
++				<action function="set">tw_active_slot=B</action>
++			</action>
++			<action>
++				<conditions>
++					<condition var1="tw_active_slot" op="!=" var2="A"/>
++					<condition var1="tw_active_slot" op="!=" var2="B"/>
++					<condition var1="property.ro.boot.slot" var2="a"/>
++				</conditions>
++				<action function="set">tw_active_slot=A</action>
++			</action>
++			<action>
++				<conditions>
++					<condition var1="tw_active_slot" op="!=" var2="A"/>
++					<condition var1="tw_active_slot" op="!=" var2="B"/>
++					<condition var1="property.ro.boot.slot" var2="b"/>
++				</conditions>
++				<action function="set">tw_active_slot=B</action>
++			</action>
+ 			<action>
+ 				<actions>
+ 					<action function="set">tw_clear_destination=main2</action>
 @@ -510,6 +510,7 @@
  				<text>{@reboot_system_btn=Reboot System}</text>
  				<actions>

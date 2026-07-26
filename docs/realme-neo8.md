@@ -24,8 +24,8 @@
 
 - **File-based encryption (FBE)** and metadata encryption support
 - **OPlus touch service** and touch firmware support
-- **WLAN service** with WPA2/WPA3 connection and status display
-- **Dynamic recovery partition aliases** for image flashing
+- **WLAN service** with WPA2/WPA3 supplicant handling and status display
+- **Explicit physical A/B targets** for image flashing
 - **Fastboot / Fastbootd** handling
 - **Center punch-hole** and status bar layout adjustments
 - **Optional F2FS virtual SD card** partition (`rannki` -> `/SDKa`)
@@ -34,14 +34,14 @@
 
 | Partition | Size | Type | Notes |
 |-----------|------|------|-------|
-| boot | 100663296 | Image | A/B slot |
-| init_boot | 8388608 | Image | A/B slot |
-| vendor_boot | 100663296 | Image | A/B slot |
-| dtbo | 25165824 | Image | A/B slot |
-| vbmeta | 65536 | Image | A/B slot |
-| vbmeta_system | 65536 | Image | A/B slot |
-| vbmeta_vendor | 65536 | Image | A/B slot |
-| recovery | 104857600 | Image | A/B slot |
+| boot_a / boot_b | 100663296 | Image | Physical A/B targets |
+| init_boot_a / init_boot_b | 8388608 | Image | Physical A/B targets |
+| vendor_boot_a / vendor_boot_b | 100663296 | Image | Physical A/B targets |
+| dtbo_a / dtbo_b | 25165824 | Image | Physical A/B targets |
+| vbmeta_a / vbmeta_b | 65536 | Image | Physical A/B targets |
+| vbmeta_system_a / vbmeta_system_b | 65536 | Image | Physical A/B targets |
+| vbmeta_vendor_a / vbmeta_vendor_b | 65536 | Image | Physical A/B targets |
+| recovery_a / recovery_b | 104857600 | Image | Physical A/B targets |
 | system | Logical | EROFS | A/B slot, dynamic |
 | system_ext | Logical | EROFS | A/B slot, dynamic |
 | system_dlkm | Logical | EROFS | A/B slot, dynamic |
@@ -53,6 +53,11 @@
 | userdata | - | F2FS | Data + FBE |
 | misc | - | EMMC | Boot control |
 | persist | - | EXT4 | Persist partition |
+
+The image list deliberately avoids unsuffixed `boot`, `recovery` and `vbmeta`
+aliases. This keeps image flashing independent of a missing or late slot
+property. The `super` entry is created by TWRP's dynamic-partition manager and
+is not duplicated in `twrp.flags`.
 
 ## FBE / Decryption
 
@@ -125,10 +130,16 @@ OPlus touch service integration:
 
 ## Wi-Fi
 
-- Full supplicant support with WPA2/WPA3
+- WPA2/WPA3 supplicant workflow
 - DHCP client with fallback
 - Status display in TWRP UI
-- Module loading via `wifi-load-modules.sh`
+- WCN7750/WPSS module loading via `wifi-load-modules.sh`
+- Up to 45 seconds for a cold firmware start before reporting failure
+- Runtime executable-mode repair for `neo8_wifi_hal_client`
+
+`neo8_wifi_hal_client` is also stored as an executable in Git. The loader
+repairs the mode at runtime because Android `PRODUCT_COPY_FILES` can install a
+prebuilt helper as `0644` in the recovery ramdisk.
 
 ## Sepolicy
 
@@ -168,6 +179,10 @@ Use `--slot=a` when `current-slot` reports `a`.
 - `TW_FORCE_STOCK_THEME_ON_BOOT := true` — forces stock theme at boot to avoid UI corruption.
 - `TW_SKIP_ADDITIONAL_FSTAB := true` — skips additional fstab overlay.
 - `TW_HAS_EDL_MODE := false` — no EDL mode entry in TWRP.
+- The reboot page falls back to `ro.boot.slot_suffix` and `ro.boot.slot` when
+  the recovery backend has not populated `tw_active_slot`.
+- `/SDKa` is shown only when `/dev/block/by-name/rannki` exists and contains
+  an F2FS filesystem.
 
 ## Device Tree Path
 
