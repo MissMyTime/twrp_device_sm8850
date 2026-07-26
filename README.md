@@ -21,12 +21,6 @@
 
 所有设备均使用 A/B recovery 分区。生成的 `recovery.img` 为 ramdisk-only 镜像，应按当前槽位刷入 `recovery`，不建议使用 `fastboot boot recovery.img` 临时启动。
 
-### realme Neo8 分区与启动说明
-
-Neo8 的镜像刷入列表直接使用 `boot_a` / `boot_b`、`recovery_a` / `recovery_b` 等物理分区节点，不依赖无后缀槽位别名。`super` 和动态分区仍由 TWRP 的标准映射流程处理，设备树不会在 `twrp.flags` 中重复创建 `super` 项。
-
-设备专属配置还包括 `rannki` 虚拟 SD 卡、从 boot 属性回填当前槽位，以及 WCN7750 冷启动等待和 Wi-Fi HAL 客户端执行权限修复。详见 [Neo8 设备文档](docs/realme-neo8.md)。
-
 ## 快速开始
 
 ### 1. 初始化 TWRP 源码
@@ -138,7 +132,7 @@ twrp_device_sm8850/
 - `patches/myron`：只包含 Myron 的 MTP 组合模式与密钥升级拒绝保护；不替换完整 vold 文件，不访问系统 keystore 数据库。
 - `patches/annibale`：保留 stock vold，不应用其他设备的 KeyMint 环境切换。
 - `patches/nezha`：Xiaomi 17 Ultra 的 KeyMint 环境与密钥存储保护。
-- `patches/neo8`：realme Neo8 的 TMS/SPU、OPlus Weaver、DRM、init、槽位显示与 KeyMint 修改。
+- `patches/neo8`：realme Neo8 的 TMS/SPU、OPlus Weaver、DRM、init 与 KeyMint 修改。
 
 详细内容见 [补丁说明](docs/PATCHES.md)。仓库的 Patch isolation workflow 会检查公共补丁和各设备目录之间是否出现不应存在的交叉引用。
 

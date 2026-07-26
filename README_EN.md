@@ -20,12 +20,6 @@ This repository contains four complete device trees and the TWRP source changes 
 
 All four devices use A/B recovery partitions. The generated `recovery.img` is ramdisk-only and should be flashed to `recovery` for the current slot; temporary boot with `fastboot boot recovery.img` is not recommended.
 
-### realme Neo8 partition and startup notes
-
-The Neo8 image-flashing list uses physical partition nodes such as `boot_a` / `boot_b` and `recovery_a` / `recovery_b` instead of unsuffixed slot aliases. `super` and logical partitions remain on TWRP's standard dynamic-partition path; the device tree does not create a second `super` entry in `twrp.flags`.
-
-The device-specific configuration also covers the `rannki` virtual SD card, current-slot fallback from boot properties, the WCN7750 cold-start wait and recovery of the Wi-Fi HAL client's executable mode. See the [Neo8 device notes](docs/realme-neo8.md).
-
 ## Quick start
 
 ### 1. Prepare the TWRP source tree
@@ -137,7 +131,7 @@ twrp_device_sm8850/
 - `patches/myron`: Myron-only MTP composite handling and a fail-closed key-upgrade guard; no complete vold replacement or persistent keystore access.
 - `patches/annibale`: stock vold; no KeyMint environment switching from another device.
 - `patches/nezha`: Xiaomi 17 Ultra KeyMint environment and key-storage protection.
-- `patches/neo8`: realme Neo8 TMS/SPU, OPlus Weaver, DRM, init, slot display and KeyMint changes.
+- `patches/neo8`: realme Neo8 TMS/SPU, OPlus Weaver, DRM, init and KeyMint changes.
 
 See [PATCHES.md](docs/PATCHES.md) for details. The Patch isolation workflow checks that common and per-device directories do not acquire cross-device implementations.
 
