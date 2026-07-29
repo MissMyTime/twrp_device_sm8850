@@ -1,0 +1,153 @@
+diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
+--- a/gui/theme/common/portrait.xml
++++ b/gui/theme/common/portrait.xml
+@@ -1234,21 +1234,143 @@
+ 		<page name="formatdata_confirm">
+ 			<action>
+ 				<condition var1="tw_confirm_formatdata" op="=" var2="yes"/>
+ 				<actions>
+-					<action function="set">tw_back=formatdata</action>
+-					<action function="set">tw_action=wipe</action>
+-					<action function="set">tw_action_param=DATAMEDIA</action>
+-					<action function="set">tw_action_text1={@formatting_data=Formatting Data...}</action>
+-					<action function="set">tw_complete_text1={@format_data_complete=Data Format Complete}</action>
+-					<action function="page">action_page</action>
++					<action function="set">tw_operation_state=0</action>
++					<action function="set">tw_operation_status=1</action>
++					<action function="page">formatdata_vab_check</action>
+ 				</actions>
+ 			</action>
+ 
+ 			<action>
+ 				<condition var1="tw_confirm_formatdata" op="!=" var2="yes"/>
+ 				<action function="page">formatdata</action>
+ 			</action>
+ 		</page>
+ 
++		<page name="formatdata_vab_check">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_hdr=Format Data}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row7_y%" placement="5"/>
++				<text>{@format_data_undo=This cannot be undone.}</text>
++			</text>
++
++			<template name="progress_bar"/>
++
++			<action>
++				<condition var1="tw_operation_state" op="=" var2="0"/>
++				<action function="cmd">/system/bin/twrp-vab-format-guard.sh</action>
++			</action>
++
++			<action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="1"/>
++					<condition var1="tw_operation_status" op="=" var2="0"/>
++				</conditions>
++				<action function="page">formatdata_vab_ready</action>
++			</action>
++
++			<action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="1"/>
++					<condition var1="tw_operation_status" op="!=" var2="0"/>
++				</conditions>
++				<action function="page">formatdata_vab_blocked</action>
++			</action>
++		</page>
++
++		<page name="formatdata_vab_ready">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_hdr=Format Data}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row6_y%" placement="5"/>
++				<text>{@format_data_ptr1=Format Data will wipe all of your apps,}</text>
++			</text>
++
++			<text style="text_m_fail">
++				<placement x="%center_x%" y="%row8_y%" placement="5"/>
++				<text>{@format_data_undo=This cannot be undone.}</text>
++			</text>
++
++			<button style="main_button">
++				<placement x="%indent%" y="%row17_y%"/>
++				<text>{@format_data_btn=Format Data}</text>
++				<actions>
++					<action function="set">tw_back=formatdata</action>
++					<action function="set">tw_action=wipe</action>
++					<action function="set">tw_action_param=DATAMEDIA</action>
++					<action function="set">tw_action_text1={@formatting_data=Formatting Data...}</action>
++					<action function="set">tw_complete_text1={@format_data_complete=Data Format Complete}</action>
++					<action function="page">action_page</action>
++				</actions>
++			</button>
++
++			<button style="main_button">
++				<placement x="%indent%" y="%row20_y%"/>
++				<text>{@back_btn=Back}</text>
++				<action function="page">formatdata</action>
++			</button>
++
++			<action>
++				<touch key="home"/>
++				<action function="page">main</action>
++			</action>
++
++			<action>
++				<touch key="back"/>
++				<action function="page">formatdata</action>
++			</action>
++		</page>
++
++		<page name="formatdata_vab_blocked">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_vab_blocked_hdr=Format Data Blocked}</text>
++			</text>
++
++			<text style="text_m_fail">
++				<placement x="%center_x%" y="%row5_y%" placement="5"/>
++				<text>{@format_data_vab_blocked_1=Pending A/B OTA snapshot detected.}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row7_y%" placement="5"/>
++				<text>{@format_data_vab_blocked_2=Boot the newly installed system first.}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row9_y%" placement="5"/>
++				<text>{@format_data_vab_blocked_3=Format Data was cancelled to protect the ROM.}</text>
++			</text>
++
++			<button style="main_button">
++				<placement x="%indent%" y="%row19_y%"/>
++				<text>{@back_btn=Back}</text>
++				<action function="page">formatdata</action>
++			</button>
++
++			<action>
++				<touch key="home"/>
++				<action function="page">main</action>
++			</action>
++
++			<action>
++				<touch key="back"/>
++				<action function="page">formatdata</action>
++			</action>
++		</page>
++
+ 		<page name="wlan_password">
+ 		    <template name="page"/>

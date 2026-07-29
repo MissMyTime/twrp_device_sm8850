@@ -5,7 +5,7 @@ This document describes the purpose of each source modification under `patches/`
 Patches are grouped by scope:
 
 - `patches/common/` — applied to **all four devices**. Recovery framework changes plus the Weaver retry adjustment.
-- `patches/<device>/` — applied **only** when building that device. `neo8` contains its recovery framework and KeyMint overrides; `nezha` contains its KeyMint implementation; `myron` contains only its MTP and fail-closed key-upgrade guards; `annibale` keeps stock vold.
+- `patches/<device>/` — applied **only** when building that device. `neo8` contains its recovery framework and KeyMint overrides; `nezha` contains its KeyMint implementation; `myron` contains its MTP, Format Data UI guard and splash overrides; `annibale` keeps stock vold.
 
 `scripts/apply-patches.sh <twrp-source> <codename>` always applies `common` first, then the codename's own directory.
 
@@ -16,6 +16,10 @@ Patches are grouped by scope:
 | File | Change Description |
 |------|-------------------|
 | `twrp-functions.cpp` | Null-pointer guard in `TWFunc::Init_Recovery` when the current storage partition is not found (avoids a crash on devices where the storage lookup fails early). |
+
+### `bootable_recovery/language_display_names.patch`
+
+Uses stable English display names for Czech, Greek and Ukrainian so the language list remains readable with the Simplified Chinese recovery font. Translation contents are unchanged.
 
 ### `system_vold/system_vold.patch`
 
@@ -33,9 +37,13 @@ Neo8-only direct reboot flow, WLAN layout coordinates and dynamic system-size ru
 
 Myron-only `twrp_mtp_adb` configfs switching, which keeps ADB online while MTP is enabled. Common recovery and the other devices use the standard `mtp,adb` path.
 
-### `patches/myron/patches/system_vold/no_key_upgrade_writeback.patch`
+### `patches/myron/patches/bootable_recovery/format_data_guard_ui.patch`
 
-Keeps the verified TWRP vold baseline but fails closed if KeyMint returns an upgraded blob. Recovery never writes or commits that blob, so a mismatched recovery environment cannot replace the system-owned key.
+Runs the bounded Virtual A/B snapshot check on an isolated GUI page and requires a second explicit confirmation before formatting Data. This avoids nesting Format Data in the command worker thread.
+
+### `patches/myron/files/bootable/recovery/gui/theme/portrait_hdpi/`
+
+Myron-only koi splash resources.
 
 ### `patches/neo8/patches/system_vold/key_storage_recovery_safety.patch`
 

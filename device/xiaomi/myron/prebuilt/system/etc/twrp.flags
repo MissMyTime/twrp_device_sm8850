@@ -41,6 +41,3 @@
 /spunvm          emmc     /dev/block/bootdevice/by-name/spunvm        flags=display="SPUNVM";backup=1;flashimg=1
 /soccp           emmc     /dev/block/bootdevice/by-name/soccp         flags=display="SOCCP";backup=1;flashimg=1;slotselect
 /logfs           emmc     /dev/block/bootdevice/by-name/logfs         flags=display="Logfs";backup=1;flashimg=1
-
-# Removable storage
-/usb_otg         auto     /devices/platform/soc/a600000.ssusb/*.dwc3/xhci-hcd.*.auto* flags=display="USB-OTG";storage;wipeingui;removable;voldmanaged=usbotg:auto

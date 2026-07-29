@@ -1,32 +1,33 @@
-# patches/common — 全机型通用补丁
+# SM8850 / SM8750 通用 recovery 补丁
 
-本目录只保存 myron、annibale、nezha 与 RE6402L1 都能安全使用的源码修改。设备相关实现必须放在 `patches/<device>/` 或对应设备树中；公共源码只能通过通用脚本钩子和显式属性开关调用它们。
+本目录只保存所有受支持设备都能安全复用的 recovery 框架修改。设备专属的 KeyMint、Weaver、MTP、主题和启动逻辑必须放在 `patches/<device>/` 或对应设备树中。
 
-## files/bootable/recovery/
+## 通用 recovery 文件
 
-- `twinstall.cpp`：Virtual A/B 槽位检测与 recovery 自动恢复
-- `partition.cpp` / `partitionmanager.cpp`：动态分区、FBE、存储处理及标准 `mtp,adb` 组合模式
-- `twrp.cpp` / `twrp-functions.cpp`：启动、重启和通用设备钩子
-- `gui/`：通用界面、语言和网络支持
-- `prebuilt/Android.mk`：公共预编译文件打包规则
+`files/bootable/recovery/` 包含以下公共修复：
 
-设备钩子采用固定名称，并且仅在设备树提供对应脚本时运行：
+- Android 16 FBE、解密后存储映射和可选设备脚本钩子。
+- Data、Metadata 的 F2FS 检查、修复与格式化支持。
+- Internal Storage、Dalvik/ART Cache 等虚拟清除项目的文件系统操作保护。
+- 传统安装器的 `/sbin/sh`、`bash`、`bas`、`getprop` 兼容路径。
+- 官方 A/B 安装成功状态处理、LP/Super 容量检查与安全修复。
+- 刷写 Super 镜像前解除动态分区映射。
+- 安装阶段性能策略切换及结束后恢复。
+- 通用 WLAN、ADB、MTP、亮度、振动和重启框架。
+
+## 增量补丁
+
+- `bootable_recovery/0002-nullptr-crash-fix.patch`：存储分区查找失败时的空指针保护。
+- `bootable_recovery/language_display_names.patch`：Czech、Greek、Ukrainian 使用稳定英文显示名，避免简体中文字体缺字。
+- `system_vold/system_vold.patch`：Android 16 Weaver 服务等待与重试。
+- `external_*`、`system_extras`：recovery 工具的 Soong 命名空间和目标端构建规则。
+
+## 设备隔离
+
+公共 recovery 只调用以下固定名称的可选设备脚本：
 
 - `/system/bin/twrp-pre-decrypt.sh`
 - `/system/bin/twrp-decrypt-retry.sh`
 - `/system/bin/twrp-reboot-cleanup.sh`
 
-## files/system/vold/Weaver1.cpp
-
-Android 16 FBE / Weaver 服务等待与重试，四台设备共同使用。
-
-## patches/
-
-- `bootable_recovery/0002-nullptr-crash-fix.patch`：存储分区查找失败时的空指针保护
-- `external_*/soong_namespace.patch`：隔离额外 recovery 工具的 Soong 模块命名空间
-- `system_vold/system_vold.patch`：Weaver1 服务重试
-- `system_extras/partition_tools_target_build.patch`：同时生成 recovery 使用的 `lpmake`、`lpadd` 与 `lpunpack` 目标端程序
-
-完整源码文件是 recovery 框架修改的唯一基准。设备专属的完整文件和增量补丁位于对应的 `patches/<device>/` 目录。
-
-Myron 使用自己的 `twrp_mtp_adb` configfs 切换，由 `patches/myron/patches/bootable_recovery/mtp_composite.patch` 单独应用，不进入其他设备。
+公共目录不得包含具体机型、厂商安全服务或专属分区规则。Myron 的 `twrp_mtp_adb`、Format Data 页面和双鱼开屏均位于 `patches/myron/`，不会影响其他设备。

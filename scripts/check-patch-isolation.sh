@@ -21,7 +21,10 @@ assert_no_match() {
 assert_no_match_outside_stock_matrix() {
     local pattern="$1"
     shift
-    if grep -RIniE --exclude='compatibility_matrix.device.xml' -- "$pattern" "$@"; then
+    if grep -RIniE \
+            --exclude='compatibility_matrix.device.xml' \
+            --exclude='README.md' \
+            -- "$pattern" "$@"; then
         fail "unexpected device-specific content found"
     fi
 }
@@ -115,6 +118,35 @@ grep -q 'setprop sys.usb.config twrp_mtp_adb' \
 [ ! -e "$REPO_ROOT/patches/neo8/patches/bootable_recovery/mtp_composite.patch" ] || \
     fail "Neo8 must use the standard common MTP path"
 
+grep -q '/system/bin/twrp-vab-format-guard.sh' \
+    "$REPO_ROOT/patches/myron/patches/bootable_recovery/format_data_guard_ui.patch" || \
+    fail "Myron isolated Format Data guard page is missing"
+[ -x "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/twrp-vab-format-guard.sh" ] || \
+    fail "Myron Format Data guard script must be executable"
+grep -q 'get-snapshot-merge-status' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/twrp-vab-format-guard.sh" || \
+    fail "Myron Virtual A/B snapshot check is missing"
+
+if sed -n \
+        '/int TWPartitionManager::Format_Data(void)/,/int TWPartitionManager::Wipe_Media_From_Data(void)/p' \
+        "$REPO_ROOT/patches/common/files/bootable/recovery/partitionmanager.cpp" | \
+        grep -q 'WaitForService'; then
+    fail "Format Data must not block the recovery UI waiting for BootControl"
+fi
+
+[ -s "$REPO_ROOT/patches/myron/files/bootable/recovery/gui/theme/portrait_hdpi/images/splashkoi.png" ] || \
+    fail "Myron koi splash image is missing"
+grep -q 'splashkoi' \
+    "$REPO_ROOT/patches/myron/files/bootable/recovery/gui/theme/portrait_hdpi/splash.xml" || \
+    fail "Myron koi splash resource is not referenced"
+
+grep -q 'mount_runtime_partition vendor_dlkm' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/wifi-load-modules.sh" || \
+    fail "Myron runtime WLAN module selection is missing"
+grep -q 'wifi-dhcp.lease' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/wifi-dhcp.sh" || \
+    fail "Myron WLAN lease publication is missing"
+
 for file in \
     prebuilt/odm/bin/hw/android.hardware.weaver-service.thales \
     prebuilt/vendor_dlkm/lib/modules/stm_st54se_gpio.ko \
@@ -131,12 +163,16 @@ grep -q 'Recovery must never persist a KeyMint-upgraded blob' \
     "$REPO_ROOT/patches/nezha/files/system/vold/KeyStorage.cpp" || \
     fail "Nezha key-upgrade write-back protection is missing"
 
-for device in myron annibale; do
-    prop="$REPO_ROOT/device/xiaomi/$device/system.prop"
-    if grep -nE '^(twrp\.recovery\.|twrp\.keymint\.)' "$prop"; then
-        fail "$device must not opt into another device's recovery behavior"
-    fi
-done
+myron_prop="$REPO_ROOT/device/xiaomi/myron/system.prop"
+if grep -nE '^(twrp\.keymint\.|twrp\.recovery\.)' "$myron_prop" | \
+        grep -v '^.*:twrp\.recovery\.post_decrypt_media_bind=1$'; then
+    fail "Myron contains an unapproved recovery or KeyMint property"
+fi
+
+annibale_prop="$REPO_ROOT/device/xiaomi/annibale/system.prop"
+if grep -nE '^(twrp\.recovery\.|twrp\.keymint\.)' "$annibale_prop"; then
+    fail "Annibale must not opt into another device's recovery behavior"
+fi
 
 while IFS= read -r patch; do
     git apply --numstat "$patch" >/dev/null

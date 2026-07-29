@@ -38,6 +38,7 @@ PRODUCT_SOONG_NAMESPACES += \
 # -----------------------------------------------------------------------------
 PRODUCT_PACKAGES += \
     fastbootd \
+    ip \
     lpdump \
     lpflash \
     lpmake \
@@ -50,17 +51,18 @@ PRODUCT_PACKAGES += \
     mkfs.f2fs \
     sload_f2fs \
     fsck.erofs \
-    bash \
     strace
 
 # -----------------------------------------------------------------------------
 # Recovery fstab
 # -----------------------------------------------------------------------------
 PRODUCT_COPY_FILES += \
-    $(DEVICE_PATH)/recovery.fstab:recovery/root/system/etc/recovery.fstab
+    $(DEVICE_PATH)/recovery.fstab:recovery/root/system/etc/recovery.fstab \
+    $(DEVICE_PATH)/prebuilt/system/bin/bash:recovery/root/system/bin/bash
 
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/prebuilt/system/etc/twrp.flags:recovery/root/system/etc/twrp.flags \
+    $(DEVICE_PATH)/prebuilt/system/etc/task_profiles.json:$(TARGET_COPY_OUT_SYSTEM)/etc/task_profiles.json \
     $(DEVICE_PATH)/prebuilt/system/etc/task_profiles.json:recovery/root/system/etc/task_profiles.json \
     $(DEVICE_PATH)/prebuilt/system/etc/event-log-tags:recovery/root/system/etc/event-log-tags \
     $(DEVICE_PATH)/prebuilt/system/etc/vintf/manifest.xml:recovery/root/system/etc/vintf/manifest.xml \
@@ -93,6 +95,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-dhcp.sh:recovery/root/system/bin/wifi-dhcp.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-load-modules.sh:recovery/root/system/bin/wifi-load-modules.sh \
+    $(DEVICE_PATH)/prebuilt/system/bin/twrp-vab-format-guard.sh:recovery/root/system/bin/twrp-vab-format-guard.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/wpa_cli:recovery/root/system/bin/wpa_cli \
     $(DEVICE_PATH)/prebuilt/system/bin/iw:recovery/root/system/bin/iw
 

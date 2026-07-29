@@ -70,6 +70,36 @@ enum zip_type {
 	TWRP_THEME_ZIP_TYPE
 };
 
+static bool EnsureInstallerCompatibilityLink(const char* target, const char* link_path) {
+	struct stat st;
+	if (access(link_path, X_OK) == 0)
+		return true;
+
+	if (lstat(link_path, &st) == 0) {
+		if (!S_ISLNK(st.st_mode)) {
+			LOGERR("Installer compatibility path '%s' exists but is not executable.\n", link_path);
+			return false;
+		}
+		unlink(link_path);
+	}
+
+	if (access(target, X_OK) != 0 || symlink(target, link_path) != 0) {
+		LOGERR("Unable to create installer compatibility link %s -> %s: %s\n",
+		       link_path, target, strerror(errno));
+		return false;
+	}
+
+	LOGINFO("Created installer compatibility link %s -> %s\n", link_path, target);
+	return true;
+}
+
+static bool EnsureInstallerCompatibilityPaths() {
+	return EnsureInstallerCompatibilityLink("/system/bin/sh", "/sbin/sh") &&
+	       EnsureInstallerCompatibilityLink("/system/bin/bash", "/sbin/bash") &&
+	       EnsureInstallerCompatibilityLink("/system/bin/bash", "/sbin/bas") &&
+	       EnsureInstallerCompatibilityLink("/system/bin/getprop", "/sbin/getprop");
+}
+
 static int Install_Theme(const char* path, ZipArchiveHandle Zip) {
 #ifdef TW_OEM_BUILD // We don't do custom themes in OEM builds
 	return INSTALL_CORRUPT;
@@ -199,6 +229,13 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
         close(pipe_fd[1]);
         return ret_val;
     }
+
+	if (!EnsureInstallerCompatibilityPaths()) {
+		gui_err("installer_compat_paths=Required installer shell/getprop compatibility paths are unavailable.");
+		close(pipe_fd[0]);
+		close(pipe_fd[1]);
+		return INSTALL_ERROR;
+	}
 
 	// Convert the vector to a NULL-terminated char* array suitable for execv.
 	const char* chr_args[args.size() + 1];
@@ -402,6 +439,11 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 
 	bool _isUpdatePkg = isUpdatePkg(Zip), _isABUpdatePkg = false;
 
+	if (_isUpdatePkg && !PartitionManager.Repair_Super_Metadata_Size(true)) {
+		gui_err("super_repair_pre_install=Unable to verify or repair logical partition capacity before installing the update.");
+		return INSTALL_ERROR;
+	}
+
 	if (unmount_system) {
 		gui_msg("unmount_system=Unmounting System...");
 		if(!PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), true)) {
@@ -449,16 +491,18 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 				PartitionManager.UnMount_By_Path("/vendor", false);
 			if (!system_mount_state)
 				PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false);
-			if (android::base::GetBoolProperty("ro.virtual_ab.enabled", false)) {
-				PartitionManager.Unlock_Block_Partitions();
-				PartitionManager.Prepare_All_Super_Volumes();
-				gui_warn("mount_vab_partitions=Devices on super may not mount until rebooting recovery.");
-			}
-			gui_warn("flash_ab_reboot=To flash additional zips, please reboot recovery to switch to the updated slot.");
-			DataManager::GetValue(TW_AUTO_REFLASHTWRP_VAR, reflashtwrp);
-			if (reflashtwrp) {
-			twrpRepacker repacker;
-			repacker.Flash_Current_Twrp();
+			if (ret_val == INSTALL_SUCCESS) {
+				if (android::base::GetBoolProperty("ro.virtual_ab.enabled", false)) {
+					PartitionManager.Unlock_Block_Partitions();
+					PartitionManager.Prepare_All_Super_Volumes();
+					gui_warn("mount_vab_partitions=Devices on super may not mount until rebooting recovery.");
+				}
+				gui_warn("flash_ab_reboot=To flash additional zips, please reboot recovery to switch to the updated slot.");
+				DataManager::GetValue(TW_AUTO_REFLASHTWRP_VAR, reflashtwrp);
+				if (reflashtwrp) {
+					twrpRepacker repacker;
+					repacker.Flash_Current_Twrp();
+				}
 			}
 		} else {
 			std::string binary_name("ui.xml");
@@ -480,6 +524,12 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 	}
 
 	if (ret_val == INSTALL_SUCCESS) gui_msg(Msg(msg::kHighlight, "install_took_seconds_msg=Install took {1} second(s).")(total_time));
+
+	if (_isUpdatePkg && ret_val == INSTALL_SUCCESS &&
+	    !PartitionManager.Repair_Super_Metadata_Size(true)) {
+		gui_err("super_repair_post_install=The update completed, but logical partition capacity verification failed.");
+		ret_val = INSTALL_ERROR;
+	}
 
 	if (_isUpdatePkg && ret_val == INSTALL_SUCCESS) {
 		if (DataManager::GetIntValue(TW_AUTO_DISABLE_AVB2_VAR)) PartitionManager.Disable_AVB2(true);

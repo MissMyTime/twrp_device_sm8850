@@ -1129,6 +1129,12 @@
 				<text>{@invalid_part_sel=Invalid partition selection}</text>
 			</text>
 
+			<text style="text_m_fail">
+				<condition var1="partitionlisterror" var2="2"/>
+				<placement x="%center_x%" y="%row17_y%" placement="5"/>
+				<text>{@virtual_part_fs=Virtual item: select Data for file-system operations}</text>
+			</text>
+
 			<button style="main_button_half_height_full_width">
 				<placement x="%indent%" y="%row18a_y%"/>
 				<text>{@repair_change_btn=Repair or Change File System}</text>
@@ -1324,7 +1330,10 @@
 
 		<page name="checkpartitionlist">
 			<action>
-				<condition var1="tw_check_partition_list" op="=" var2="1"/>
+				<conditions>
+					<condition var1="tw_check_partition_list" op="=" var2="1"/>
+					<condition var1="tw_check_partition_virtual" op="=" var2="0"/>
+				</conditions>
 				<actions>
 					<action function="set">partitionlisterror=0</action>
 					<action function="getpartitiondetails">tw_wipe_list</action>
@@ -1333,7 +1342,18 @@
 			</action>
 
 			<action>
-				<condition var1="tw_check_partition_list" op="!=" var2="1"/>
+				<condition var1="tw_check_partition_virtual" op="!=" var2="0"/>
+				<actions>
+					<action function="set">partitionlisterror=2</action>
+					<action function="page">advancedwipe</action>
+				</actions>
+			</action>
+
+			<action>
+				<conditions>
+					<condition var1="tw_check_partition_list" op="!=" var2="1"/>
+					<condition var1="tw_check_partition_virtual" op="=" var2="0"/>
+				</conditions>
 				<actions>
 					<action function="set">partitionlisterror=1</action>
 					<action function="page">advancedwipe</action>

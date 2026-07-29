@@ -1,6 +1,13 @@
 #!/system/bin/sh
 
 IFACE="${interface:-wlan0}"
+IP_TOOL="${IP_TOOL:-/system/bin/ip}"
+LEASE_FILE=/tmp/recovery/wifi-dhcp.lease
+
+if [ ! -x "$IP_TOOL" ]; then
+    echo "wifi-dhcp: missing $IP_TOOL" >&2
+    exit 1
+fi
 
 mask_to_prefix() {
     case "$1" in
@@ -25,7 +32,8 @@ mask_to_prefix() {
 
 case "$1" in
     deconfig)
-        /system/bin/ip addr flush dev "$IFACE"
+        rm -f "$LEASE_FILE"
+        "$IP_TOOL" -4 addr flush dev "$IFACE"
         ;;
     bound|renew)
         PREFIX="$(mask_to_prefix "$subnet")"
@@ -34,12 +42,13 @@ case "$1" in
         DNS_REST="${dns#* }"
         DNS2="${DNS_REST%% *}"
 
-        /system/bin/ip addr flush dev "$IFACE"
-        /system/bin/ip addr add "$ip/$PREFIX" dev "$IFACE"
-        /system/bin/ip link set "$IFACE" up
+        rm -f "$LEASE_FILE"
+        "$IP_TOOL" -4 addr flush dev "$IFACE" || exit 1
+        "$IP_TOOL" addr add "$ip/$PREFIX" dev "$IFACE" || exit 1
+        "$IP_TOOL" link set "$IFACE" up || exit 1
 
-        if [ -n "$ROUTER" ] && [ "$ROUTER" != "$router" -o -n "$router" ]; then
-            /system/bin/ip route replace default via "$ROUTER" dev "$IFACE"
+        if [ -n "$ROUTER" ]; then
+            "$IP_TOOL" route replace default via "$ROUTER" dev "$IFACE" || exit 1
         fi
 
         mkdir -p /etc
@@ -52,6 +61,14 @@ case "$1" in
             echo "nameserver $DNS2" >> /etc/resolv.conf
             setprop net.dns2 "$DNS2"
         fi
+
+        mkdir -p /tmp/recovery
+        {
+            echo "ip=$ip"
+            echo "gateway=$ROUTER"
+            echo "dns=$dns"
+        } > "$LEASE_FILE.tmp" || exit 1
+        mv -f "$LEASE_FILE.tmp" "$LEASE_FILE" || exit 1
         ;;
 esac
 

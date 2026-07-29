@@ -154,8 +154,8 @@ static int vibrate_qcom_haptics(int timeout_ms)
 {
 	if (timeout_ms <= 0)
 		return 0;
-	if (timeout_ms > 120)
-		timeout_ms = 120;
+	if (timeout_ms > 1000)
+		timeout_ms = 1000;
 	if (access(QCOM_HAPTICS_PLAY_FILE, W_OK) != 0)
 		return -1;
 
@@ -173,8 +173,8 @@ static int vibrate_input_ff(int timeout_ms)
 
 	if (timeout_ms <= 0)
 		return 0;
-	if (timeout_ms > 120)
-		timeout_ms = 120;
+	if (timeout_ms > 1000)
+		timeout_ms = 1000;
 
 	auto setup_effect = [](int fd, int timeout_ms, struct ff_effect* effect) {
 		static int16_t custom_data[] = { 0, 0, 0 };
@@ -187,7 +187,8 @@ static int vibrate_input_ff(int timeout_ms)
 			effect->u.periodic.waveform = FF_CUSTOM;
 			effect->u.periodic.period = timeout_ms;
 			effect->u.periodic.magnitude = 0x5000;
-			effect->u.periodic.custom_len = sizeof(custom_data);
+			effect->u.periodic.custom_len =
+				sizeof(custom_data) / sizeof(custom_data[0]);
 			effect->u.periodic.custom_data = custom_data;
 			effect->replay.length = timeout_ms;
 
@@ -222,22 +223,20 @@ static int vibrate_input_ff(int timeout_ms)
 	};
 
 	if (ff_fd >= 0) {
-		if (ff_effect_id < 0 || ff_effect_len != timeout_ms) {
-			if (ff_effect_id >= 0)
-				ioctl(ff_fd, EVIOCRMFF, ff_effect_id);
+		if (ff_effect_id >= 0)
+			ioctl(ff_fd, EVIOCRMFF, ff_effect_id);
 
-			struct ff_effect effect = {};
-			if (setup_effect(ff_fd, timeout_ms, &effect) < 0) {
-				LOGI("Input FF haptics cached upload failed\n");
-				close(ff_fd);
-				ff_fd = -1;
-				ff_effect_id = -1;
-				ff_effect_len = 0;
-				return -1;
-			}
-			ff_effect_id = effect.id;
-			ff_effect_len = timeout_ms;
+		struct ff_effect effect = {};
+		if (setup_effect(ff_fd, timeout_ms, &effect) < 0) {
+			LOGI("Input FF haptics cached upload failed\n");
+			close(ff_fd);
+			ff_fd = -1;
+			ff_effect_id = -1;
+			ff_effect_len = 0;
+			return -1;
 		}
+		ff_effect_id = effect.id;
+		ff_effect_len = timeout_ms;
 
 		struct input_event play = {};
 		play.type = EV_FF;
@@ -924,10 +923,6 @@ static int vk_modify(struct ev *e, struct input_event *ev)
 	// On first touch, see if we're at a virtual key
 	if (downX == -1)
 	{
-#ifndef TW_NO_HAPTICS
-		LOGI("Touch down haptic probe at %d,%d\n", x, y);
-		vibrate(30);
-#endif
 		// Attempt mapping to virtual key
 		for (i = 0; i < e->vk_count; ++i)
 		{

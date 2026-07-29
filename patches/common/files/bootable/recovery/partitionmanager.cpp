@@ -17,6 +17,7 @@
 */
 
 #include <stdio.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -896,7 +897,10 @@ void TWPartitionManager::Decrypt_Data() {
 #endif
 		}
 		if (Decrypt_Data->Is_FBE) {
-			if (DataManager::GetIntValue(TW_CRYPTO_PWTYPE) == 0) {
+			if (!Decrypt_Data->Is_Mounted()) {
+				LOGINFO("Skipping automatic default-password FBE decrypt because "
+					"/data metadata mapping is not ready\n");
+			} else if (DataManager::GetIntValue(TW_CRYPTO_PWTYPE) == 0) {
 				if (Decrypt_Device("!") == 0) {
 					gui_msg("decrypt_success=Successfully decrypted with default password.");
 					DataManager::SetValue(TW_IS_ENCRYPTED, 0);
@@ -3513,6 +3517,16 @@ bool TWPartitionManager::Flash_Image(string& path, string& filename) {
 		return false;
 	}
 
+	if (flash_part && flash_part->Get_Mount_Point() == "/super") {
+		gui_msg("unmapping_super_devices=Unmapping Super Devices...");
+		if (!Unmap_Super_Devices()) {
+			gui_err("super_unmap_failed=Unable to unmap dynamic partitions before flashing Super.");
+			return false;
+		}
+		Unlock_Block_Partitions();
+		sync();
+	}
+
 	DataManager::SetProgress(0.0);
 	if (flash_part) {
 		flash_part->Backup_FileName = filename;
@@ -3603,7 +3617,8 @@ void TWPartitionManager::Translate_Partition_Display_Names() {
 
 	std::vector<TWPartition*>::iterator sysfs;
 	for (sysfs = Partitions.begin(); sysfs != Partitions.end(); sysfs++) {
-		if (!(*sysfs)->Sysfs_Entry.empty()) {
+		if (!(*sysfs)->Sysfs_Entry.empty() &&
+		    ((*sysfs)->Display_Name.empty() || (*sysfs)->Display_Name == "Storage")) {
 			Translate_Partition((*sysfs)->Mount_Point.c_str(), "autostorage", "Storage", "autostorage", "Storage");
 		}
 	}
@@ -4260,6 +4275,143 @@ bool TWPartitionManager::Unmap_Super_Devices() {
 		}
 	closedir(d);
 	}
+	return true;
+}
+
+bool TWPartitionManager::Repair_Super_Metadata_Size(bool Display_Info) {
+	using android::fs_mgr::BlockDeviceInfo;
+	using android::fs_mgr::GetBlockDevicePartitionName;
+	using android::fs_mgr::LpMetadata;
+	using android::fs_mgr::PartitionOpener;
+	using android::fs_mgr::ReadMetadata;
+	using android::fs_mgr::UpdatePartitionTable;
+
+	PartitionOpener opener;
+	BlockDeviceInfo super_info;
+	if (!opener.GetInfo("super", &super_info) || super_info.size == 0) {
+		LOGINFO("LP capacity check skipped: physical super device is unavailable.\n");
+		return true;
+	}
+
+	auto first = ReadMetadata(opener, "super", 0);
+	if (!first) {
+		LOGERR("LP capacity check failed: metadata slot 0 is unreadable.\n");
+		if (Display_Info)
+			gui_err("super_metadata_unreadable=Unable to read logical partition metadata.");
+		return false;
+	}
+
+	const uint32_t slot_count = first->geometry.metadata_slot_count;
+	const uint32_t supported_slot_count = slot_count > 1 ? 2 : 1;
+	const uint32_t required_slots = supported_slot_count;
+	std::vector<std::pair<uint32_t, std::unique_ptr<LpMetadata>>> slots;
+	slots.emplace_back(0, std::move(first));
+
+	if (slot_count > supported_slot_count) {
+		LOGINFO("LP capacity check: ignoring %u extra metadata slot(s); this liblp supports slots 0 and 1.\n",
+		        slot_count - supported_slot_count);
+	}
+
+	for (uint32_t slot = 1; slot < supported_slot_count; ++slot) {
+		auto metadata = ReadMetadata(opener, "super", slot);
+		if (metadata)
+			slots.emplace_back(slot, std::move(metadata));
+		else
+			LOGINFO("LP capacity check: metadata slot %u is unused or unreadable.\n", slot);
+	}
+
+	if (slots.size() < required_slots) {
+		LOGERR("LP capacity check failed: only %zu of %u required metadata slots are readable.\n",
+		       slots.size(), required_slots);
+		if (Display_Info)
+			gui_err("super_metadata_slots_missing=Required logical partition metadata slots are missing.");
+		return false;
+	}
+
+	bool needs_repair = false;
+	for (const auto& entry : slots) {
+		const auto& metadata = entry.second;
+		if (metadata->block_devices.size() != 1 ||
+		    GetBlockDevicePartitionName(metadata->block_devices[0]) != "super") {
+			LOGINFO("LP capacity check skipped: slot %u uses a multi-device or retrofit super layout.\n",
+			        entry.first);
+			return true;
+		}
+
+		const uint64_t declared_size = metadata->block_devices[0].size;
+		if (declared_size > super_info.size) {
+			LOGERR("LP metadata slot %u declares %" PRIu64
+			       " bytes, larger than physical super (%" PRIu64 " bytes).\n",
+			       entry.first, declared_size, super_info.size);
+			if (Display_Info)
+				gui_err("super_metadata_too_large=Logical partition metadata is larger than the physical Super partition.");
+			return false;
+		}
+		if (declared_size < super_info.size)
+			needs_repair = true;
+	}
+
+	if (!needs_repair) {
+		LOGINFO("LP capacity check passed: metadata and physical super are both %" PRIu64 " bytes.\n",
+		        super_info.size);
+		return true;
+	}
+
+	if (android::base::GetBoolProperty("ro.virtual_ab.enabled", false)) {
+		TWPartition* metadata_partition = Find_Partition_By_Path("/metadata");
+		if (!metadata_partition || !metadata_partition->Mount(false)) {
+			LOGERR("LP capacity repair refused: metadata partition is unavailable.\n");
+			if (Display_Info)
+				gui_err("super_repair_metadata_mount=Unable to mount Metadata; LP capacity repair was cancelled.");
+			return false;
+		}
+
+		auto snapshot_manager = android::snapshot::SnapshotManager::NewForFirstStageMount();
+		if (!snapshot_manager ||
+		    snapshot_manager->GetUpdateState() != android::snapshot::UpdateState::None) {
+			LOGERR("LP capacity repair refused: a Virtual A/B update or merge may be active.\n");
+			if (Display_Info)
+				gui_err("super_repair_snapshot_active=Virtual A/B update state is not idle; LP capacity repair was cancelled.");
+			return false;
+		}
+	}
+
+	if (Display_Info) {
+		gui_msg(Msg(msg::kHighlight,
+		            "repair_super_capacity=Repairing LP metadata capacity to {1} bytes...")
+		                (std::to_string(super_info.size)));
+	}
+
+	for (auto& entry : slots) {
+		auto& metadata = entry.second;
+		if (metadata->block_devices[0].size == super_info.size)
+			continue;
+
+		const uint64_t old_size = metadata->block_devices[0].size;
+		metadata->block_devices[0].size = super_info.size;
+		if (!UpdatePartitionTable(opener, "super", *metadata, entry.first)) {
+			LOGERR("Failed to repair LP metadata slot %u (%" PRIu64 " -> %" PRIu64 " bytes).\n",
+			       entry.first, old_size, super_info.size);
+			if (Display_Info)
+				gui_err("super_repair_write_failed=Failed to write repaired logical partition metadata.");
+			return false;
+		}
+
+		auto verify = ReadMetadata(opener, "super", entry.first);
+		if (!verify || verify->block_devices.size() != 1 ||
+		    verify->block_devices[0].size != super_info.size) {
+			LOGERR("LP metadata slot %u did not verify after repair.\n", entry.first);
+			if (Display_Info)
+				gui_err("super_repair_verify_failed=Logical partition metadata verification failed after repair.");
+			return false;
+		}
+		LOGINFO("Repaired LP metadata slot %u: %" PRIu64 " -> %" PRIu64 " bytes.\n",
+		        entry.first, old_size, super_info.size);
+	}
+
+	sync();
+	if (Display_Info)
+		gui_msg("super_repair_done=LP metadata capacity repaired and verified.");
 	return true;
 }
 

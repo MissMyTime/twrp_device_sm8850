@@ -1,4 +1,4 @@
-# Redmi K90 Pro Max (myron)
+# Redmi K90 Pro Max / POCO F8 Ultra (myron)
 
 ## Device information
 
@@ -16,24 +16,32 @@
 | Userdata / metadata | F2FS |
 | Build target | `twrp_myron-myron-eng` |
 
-## Encryption and security services
+## Encryption
 
-| Component | Recovery implementation |
-|---|---|
-| Default KeyMint | QTI `onekeymint-service-qti` |
-| StrongBox | NXP `keymint3-service.strongbox.nxp` |
-| Weaver | NXP `weaver-service.nxp-qti` |
-| Gatekeeper | QTI vendor service |
-| FBE policy | fscrypt policy v2 with wrapped keys |
+Myron uses QTI KeyMint with NXP StrongBox and Weaver services. The recovery tree preserves this device-specific chain and does not use the Neo8 or Nezha vold implementations.
 
-Myron uses the verified TWRP vold baseline together with the common `Weaver1.cpp` compatibility change. Recovery properties match the installed Android 16 system (`2026-05-01`) and vendor (`2026-02-01`) patch levels before QTI KeyMint starts. A small KeyStorage guard aborts instead of persisting an upgraded blob if the environments ever differ. Myron does not bind or modify `/data/misc/keystore`, and it does not apply the Neo8 or Nezha KeyMint implementations.
+The recovery starts the secure-element services in the verified order, avoids an early default-password attempt before the Data mapping exists, and creates the media bind only after successful FBE decryption. These changes improve official HyperOS and AOSP compatibility without writing recovery-generated KeyMint upgrades back to user data.
 
-## Partition handling
+## Storage and flashing
 
-- Virtual A/B and dynamic partitions are enabled.
-- `AB_OTA_PARTITIONS` follows the 58 entries from the official OS3.0.306.4.WPMCNXM full-OTA payload.
-- `/data` uses Android 16 FBE and metadata encryption with `wrappedkey_v0`.
-- Recovery is stored in A/B recovery partitions and the image excludes the kernel.
+- Data and Metadata include F2FS check, repair and format tools.
+- Internal Storage and Dalvik/ART Cache are treated as virtual wipe entries, not standalone block devices.
+- Duplicate USB-OTG entries are removed so `/data/media` remains the internal storage target.
+- Legacy installers receive `/sbin/sh`, `/sbin/bash`, `/sbin/bas` and `/sbin/getprop` compatibility paths.
+- Official A/B packages only prepare the new slot after a successful install.
+- LP metadata capacity is checked before and after an OTA. Repair is limited to an undersized, single-device Super layout and is refused while a Virtual A/B update is active.
+- Raw Super flashing unmaps dynamic partitions before opening the physical block device.
+- Format Data uses a bounded userspace snapshot check followed by a separate explicit confirmation. The recovery UI thread never blocks waiting for BootControl.
+
+## Connectivity and hardware
+
+- MTP and ADB use the Myron-only `twrp_mtp_adb` composite mode.
+- Duplicate Sideload USB property handlers are removed to avoid the first-session disconnect.
+- WLAN mounts the active slot's `system_dlkm` and `vendor_dlkm`, loads matching runtime modules when available, and falls back to recovery modules.
+- DHCP configures IPv4, the default route and DNS, then publishes a lease state file.
+- Brightness uses `/sys/class/backlight/panel0-backlight/brightness` with a verified maximum of `16383`.
+- Force-feedback effects are recreated for every vibration request and no unsolicited first-touch probe is emitted.
+- The Myron theme includes stable language labels and the device-specific koi splash.
 
 ## Build
 
@@ -44,16 +52,10 @@ lunch twrp_myron-myron-eng
 m recoveryimage
 ```
 
-Output:
-
-```text
-out/target/product/myron/recovery.img
-```
-
-The unified build script may also be used:
+or:
 
 ```bash
-twrp_device_sm8850/scripts/build.sh myron
+scripts/build.sh myron
 ```
 
 ## Flash
@@ -65,15 +67,4 @@ fastboot --slot=b flash recovery recovery.img
 fastboot reboot recovery
 ```
 
-Use `--slot=a` when `current-slot` reports `a`.
-
-`fastboot boot recovery.img` is not supported because the generated recovery image is ramdisk-only.
-
-## Notes
-
-- `TW_NO_AUTO_DECRYPT := true`: start decryption manually from TWRP when required.
-- The device tree includes Wi-Fi, MTP, ADB, touch, brightness and haptics support.
-- CPU frequency scaling defaults to `schedutil`; set `recovery.perf.mode=1` for `performance` and `0` to return to `schedutil`.
-- Do not apply the Neo8 or Nezha vold implementation to Myron.
-- Rebuild the recovery with matching platform and vendor patch levels after a firmware security-level update.
-- The recovery AVB footer uses rollback index 1, matching the stock recovery requirement.
+Use `--slot=a` when the active slot is `b`. `fastboot boot recovery.img` is not supported because the image is ramdisk-only.

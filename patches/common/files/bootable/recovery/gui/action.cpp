@@ -1054,6 +1054,7 @@ int GUIAction::checkpartitionlist(std::string arg)
 {
 	string List, part_path;
 	int count = 0;
+	int virtual_selection = 0;
 
 	if (arg.empty())
 		arg = "tw_wipe_list";
@@ -1064,8 +1065,12 @@ int GUIAction::checkpartitionlist(std::string arg)
 		while (end_pos != string::npos && start_pos < List.size()) {
 			part_path = List.substr(start_pos, end_pos - start_pos);
 			LOGINFO("checkpartitionlist part_path '%s'\n", part_path.c_str());
-			if (part_path == "/and-sec" || part_path == "DALVIK" || part_path == "INTERNAL") {
-				// Do nothing
+			if (part_path == "INTERNAL") {
+				virtual_selection = 1;
+			} else if (part_path == "DALVIK") {
+				virtual_selection = 2;
+			} else if (part_path == "/and-sec") {
+				virtual_selection = 3;
 			} else {
 				count++;
 			}
@@ -1073,8 +1078,10 @@ int GUIAction::checkpartitionlist(std::string arg)
 			end_pos = List.find(";", start_pos);
 		}
 		DataManager::SetValue("tw_check_partition_list", count);
+		DataManager::SetValue("tw_check_partition_virtual", virtual_selection);
 	} else {
 		DataManager::SetValue("tw_check_partition_list", 0);
+		DataManager::SetValue("tw_check_partition_virtual", 0);
 	}
 	return 0;
 }

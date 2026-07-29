@@ -411,6 +411,7 @@ public:
 	int Set_Crypto_Type(const char* crypto_type);                             // Sets encryption type for FDE (block) and FBE (file) devices (ro.crypto.type)
 	void Unlock_Block_Partitions();                                           // Unlock all block devices after update_engine runs
 	bool Unmap_Super_Devices();                                               // Unmap super devices in TWRP
+	bool Repair_Super_Metadata_Size(bool Display_Info);                       // Grow undersized single-device LP metadata to the physical super size
 	bool Check_Pending_Merges();                                              // Check and run pending merges on data for VAB devices
     bool Disable_AVB2(bool Display_Info);                                     // Disable AVB 2.0
 

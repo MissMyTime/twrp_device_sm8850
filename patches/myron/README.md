@@ -1,7 +1,19 @@
-# patches/myron — 红米 K90 Pro Max
+# Myron 专属补丁
 
-本目录只保存 Myron 专用的 recovery init 映射、MTP/ADB 组合模式和密钥升级拒绝保护。
+本目录只保存 Redmi K90 Pro Max / POCO F8 Ultra (`myron`) 的 recovery 源码覆盖与增量补丁。
 
-Myron 保留已验证的 TWRP vold 基线，不覆盖完整 `Decrypt.cpp` 或 `KeyStorage.cpp`，也不绑定、修改 `/data/misc/keystore`。设备树在 KeyMint 启动前提供与当前系统一致的 Android 版本、系统补丁和 vendor 补丁值。若 KeyMint 仍返回升级 blob，解密立即中止，升级结果不会写入 `/metadata`、`/data` 或 `/tmp`。
+## 内容
 
-`mtp_composite.patch` 只为 Myron 使用 `twrp_mtp_adb`，公共源码和其他机型继续使用标准 `mtp,adb`。请勿把 Neo8 或 Nezha 的 vold、MTP、Weaver 或密钥环境代码混入 Myron。
+- `mtp_composite.patch`：使用 Myron 专属 `twrp_mtp_adb` configfs 组合，保证 MTP 开启时 ADB 保持在线。
+- `format_data_guard_ui.patch`：把 Virtual A/B 状态检查和实际 Format Data 拆成两个 GUI 阶段，避免同一线程连续执行命令与格式化造成黑屏锁死。
+- `files/.../splash.xml` 与 `splashkoi.png`：Myron 专属双鱼开屏。
+- `source-files.map`：把 Myron 的 init 文件映射到 recovery 源码目录，防止构建阶段被上游同名文件覆盖。
+
+设备树中的 WLAN 模块选择、DHCP、FBE 启动链、USB、F2FS 和格式化守卫脚本由 `device/xiaomi/myron` 提供。
+
+## 隔离要求
+
+- 不得复制 Neo8 或 Nezha 的 `Decrypt.cpp`、`KeyStorage.cpp`、Weaver、KeyMint 环境覆盖或启动脚本。
+- Myron 保持 QTI KeyMint + NXP StrongBox/Weaver 路线。
+- Format Data 不得在 recovery 主线程中无超时等待 BootControl 服务。
+- Myron 专属 GUI、MTP 和开屏修改不得进入公共补丁集。

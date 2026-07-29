@@ -29,3 +29,6 @@ ro.minui.overscan_percent=0
 # USB recovery identifiers
 ro.recovery.usb.vid=18D1
 ro.recovery.usb.adb.pid=D001
+
+# Avoid a recursive /data size walk after successful FBE decryption.
+twrp.recovery.post_decrypt_media_bind=1
