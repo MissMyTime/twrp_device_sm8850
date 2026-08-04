@@ -46,6 +46,7 @@ The following fixes are retained from the final July 15, 2026 Nezha update:
 - Key-storage upgrade write-back protection
 - Pre-decrypt waiting, failure retry and reboot cleanup hooks
 - Recovery settings stored under `/data/recovery/TWRP` instead of vendor persist
+- MTP RC-only composite-mode fix, dated July 15, 2026: preserve the MTP FunctionFS ready state and route `mtp` and `twrp_mtp_adb` through `mtp,adb`
 
 ## Build
 

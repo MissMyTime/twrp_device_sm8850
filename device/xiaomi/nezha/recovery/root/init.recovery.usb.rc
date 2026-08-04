@@ -96,7 +96,6 @@ on property:sys.usb.config=mtp,adb && property:sys.usb.configfs=1
     rm /config/usb_gadget/g1/configs/b.1/f2
     rm /config/usb_gadget/g1/configs/b.1/f3
     setprop sys.usb.state none
-    setprop sys.usb.ffs.mtp.ready 0
     start adbd
 
 on property:sys.usb.config=sideload && property:sys.usb.configfs=1
@@ -119,16 +118,10 @@ on property:sys.usb.ffs.ready=1 && property:sys.usb.config=sideload && property:
     setprop sys.usb.state ${sys.usb.config}
 
 on property:sys.usb.config=mtp && property:sys.usb.configfs=1
-    write /config/usb_gadget/g1/UDC "none"
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp"
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    rm /config/usb_gadget/g1/configs/b.1/f3
-    write /config/usb_gadget/g1/idVendor 0x2717
-    write /config/usb_gadget/g1/idProduct 0xFF40
-    symlink /config/usb_gadget/g1/functions/ffs.mtp /config/usb_gadget/g1/configs/b.1/f1
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
+    setprop sys.usb.config mtp,adb
+
+on property:sys.usb.config=twrp_mtp_adb && property:sys.usb.configfs=1
+    setprop sys.usb.config mtp,adb
 
 on property:sys.usb.ffs.ready=1 && property:sys.usb.ffs.mtp.ready=1 && property:sys.usb.config=mtp,adb && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_adb"

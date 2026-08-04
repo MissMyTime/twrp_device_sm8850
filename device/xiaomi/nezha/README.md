@@ -8,6 +8,7 @@
 - 分区形态：独立 A/B recovery 分区。
 - 目标系统：HyperOS 3 / Android 16，FBE metadata 加密，动态分区，Virtual A/B。
 - 保留 2026-07-15 的 Nezha 最终解密修复：双路线启动时序、Goodix/Thales 组件、ST54 支持和密钥升级写回保护。
+- 保留 2026-07-15 的 MTP RC-only 修复：不在组合模式切换时清除 MTP FunctionFS 就绪状态，并将 `mtp`、`twrp_mtp_adb` 统一到 `mtp,adb`。
 
 ## 构建说明
 

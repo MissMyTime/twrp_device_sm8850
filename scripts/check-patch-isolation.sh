@@ -211,6 +211,25 @@ for file in \
         fail "missing Nezha July 15 fix file: $file"
 done
 
+nezha_usb_rc="$REPO_ROOT/device/xiaomi/nezha/recovery/root/init.recovery.usb.rc"
+if sed -n \
+        '/on property:sys.usb.config=mtp,adb /,/on property:sys.usb.config=sideload /p' \
+        "$nezha_usb_rc" | grep -q 'setprop sys.usb.ffs.mtp.ready 0'; then
+    fail "Nezha MTP RC-only fix must preserve the FunctionFS MTP ready state"
+fi
+for usb_mode in mtp twrp_mtp_adb; do
+    grep -A1 -F \
+        "on property:sys.usb.config=$usb_mode && property:sys.usb.configfs=1" \
+        "$nezha_usb_rc" | grep -q 'setprop sys.usb.config mtp,adb' || \
+        fail "Nezha MTP RC-only alias is missing: $usb_mode"
+done
+grep -q 'property:sys.usb.ffs.ready=1 && property:sys.usb.ffs.mtp.ready=1 && property:sys.usb.config=mtp,adb' \
+    "$nezha_usb_rc" || fail "Nezha MTP composite readiness check is missing"
+grep -q 'write /config/usb_gadget/g1/idVendor 0x2717' "$nezha_usb_rc" || \
+    fail "Nezha Xiaomi MTP vendor ID is missing"
+grep -q 'write /config/usb_gadget/g1/idProduct 0xFF48' "$nezha_usb_rc" || \
+    fail "Nezha Xiaomi MTP/ADB product ID is missing"
+
 grep -q 'normal_590' "$REPO_ROOT/device/xiaomi/nezha/recovery/root/system/bin/nezha-goodix-gate.sh" || \
     fail "Nezha normal route is missing"
 grep -q 'leica_597' "$REPO_ROOT/device/xiaomi/nezha/recovery/root/system/bin/nezha-goodix-gate.sh" || \
