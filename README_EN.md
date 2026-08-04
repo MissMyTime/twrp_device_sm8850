@@ -1,78 +1,37 @@
-# Qualcomm SM8750 / SM8850 Android 16 TWRP Device Trees and Source Patches
+# Qualcomm SM8750 / SM8850 Android 16 TWRP
 
-> TWRP 3.7.1 device trees for recent Xiaomi and realme platforms
+> TWRP 3.7.1 / Android 16 device trees and source patches for recent Xiaomi and realme platforms
 
-[![Patch isolation](https://github.com/MissMyTime/twrp_device_sm8850/actions/workflows/patch-isolation.yml/badge.svg)](https://github.com/MissMyTime/twrp_device_sm8850/actions/workflows/patch-isolation.yml)
 [![Issues](https://img.shields.io/github/issues/MissMyTime/twrp_device_sm8850)](https://github.com/MissMyTime/twrp_device_sm8850/issues)
 
-This repository contains four complete device trees and the TWRP source changes required for Android 16 / API 36 / BP2A. Device-specific decryption, startup and graphics changes are isolated so each build receives only the common patch set and its own device patch set.
+This repository provides complete device trees, shared source changes and isolated per-device patches. A build receives only the common patch set and the selected device set, preventing decryption and boot configurations from different vendors or security backends from being mixed.
 
-[中文说明](./README.md)
+[中文](./README.md)
 
 ## Supported devices
 
-| Vendor | Device | Codename | Platform | Lunch target | Security backend | Status |
-|---|---|---|---|---|---|---|
-| Xiaomi | Redmi K90 | `annibale` | `sun` | `twrp_annibale-bp2a-eng` | QTI KeyMint + NXP StrongBox/Weaver | Supported |
-| Xiaomi | Redmi K90 Pro Max | `myron` | `sm8850 / canoe` | `twrp_myron-myron-eng` | QTI KeyMint + NXP StrongBox/Weaver | Supported |
-| Xiaomi | Xiaomi 17 Ultra | `nezha` | `sm8850 / canoe` | `twrp_nezha-bp2a-eng` | QTI KeyMint + Thales/Goodix components | Supported |
-| realme | realme Neo8 | `RE6402L1` | `canoe` | `twrp_RE6402L1-bp2a-eng` | QTI KeyMint + TMS/SPU Weaver | Supported |
+| Device | Codename / build argument | Documentation |
+| --- | --- | --- |
+| Redmi K90 | `annibale` | [View](docs/xiaomi-annibale.md) |
+| Redmi K90 Pro Max / POCO F8 Ultra | `myron` | [View](docs/xiaomi-myron.md) |
+| Xiaomi 17 Ultra | `nezha` | [View](docs/xiaomi-nezha.md) |
+| realme Neo8 | `RE6402L1` / `neo8` | [View](docs/realme-neo8.md) |
 
-All four devices use A/B recovery partitions. The generated `recovery.img` is ramdisk-only and should be flashed to `recovery` for the current slot; temporary boot with `fastboot boot recovery.img` is not recommended.
+All listed devices use A/B recovery partitions. The generated `recovery.img` is ramdisk-only and should be flashed to the current recovery slot. Temporary boot with `fastboot boot recovery.img` is not recommended.
 
-## Quick start
+## Quick build
 
-### 1. Prepare the TWRP source tree
-
-See the full [build guide](docs/BUILD.md). The commands below assume the source tree is located at `~/android/twrp`.
-
-### 2. Clone this repository into the TWRP source root
+See the [build guide](docs/BUILD.md) for environment requirements and manual build instructions. The example below assumes the TWRP source tree is located at `~/android/twrp`:
 
 ```bash
 cd ~/android/twrp
 git clone https://github.com/MissMyTime/twrp_device_sm8850.git
-```
-
-### 3. Synchronize the target device tree
-
-For a manual build, copy the selected tree into its standard path under the source root:
-
-```bash
-cd ~/android/twrp
-mkdir -p device/xiaomi/myron
-rsync -a twrp_device_sm8850/device/xiaomi/myron/ device/xiaomi/myron/
-```
-
-Replace the vendor directory and codename for other devices.
-
-### 4. Apply the source changes for one device
-
-```bash
-cd ~/android/twrp
-twrp_device_sm8850/scripts/apply-patches.sh . myron
-```
-
-The device argument accepts `myron`, `annibale`, `nezha`, `RE6402L1` and `neo8`. The script applies `patches/common` first and then only the selected device set.
-
-### 5. Build
-
-Manual build:
-
-```bash
-cd ~/android/twrp
-source build/envsetup.sh
-lunch twrp_myron-myron-eng
-m recoveryimage
-```
-
-Or use the unified build script. It detects the vendor directory, synchronizes the selected device tree, applies the matching patches and starts the build:
-
-```bash
-cd ~/android/twrp
 twrp_device_sm8850/scripts/build.sh myron
 ```
 
-Set `LUNCH_TARGET` to select the lunch target explicitly:
+Replace `myron` with the target device argument. The script synchronizes the matching device tree, applies `patches/common`, applies only the selected device patches and starts the build.
+
+To select the Lunch target explicitly:
 
 ```bash
 LUNCH_TARGET=twrp_myron-myron-eng twrp_device_sm8850/scripts/build.sh myron
@@ -80,95 +39,53 @@ LUNCH_TARGET=twrp_myron-myron-eng twrp_device_sm8850/scripts/build.sh myron
 
 ## Flashing
 
-Verify the device codename, unlock the bootloader and back up important data before flashing.
+Verify the device codename, bootloader state and current slot, and back up important data before flashing.
 
 ```bash
 adb reboot bootloader
 fastboot getvar current-slot
-fastboot --slot=b flash recovery recovery.img
+fastboot --slot=a flash recovery recovery.img
 fastboot reboot recovery
 ```
 
-The example assumes slot `b`. Use `--slot=a` when `current-slot` reports `a`. Flashing only the current slot leaves the other slot available as a fallback.
+The example uses slot `a`; change it to the value reported by `current-slot`. Flashing only the current slot keeps the other slot available as a fallback.
 
-Build output is written to `out/target/product/<codename>/recovery.img`.
+## Repository scope
 
-## Repository layout
+- Android 16 FBE and metadata-encryption support;
+- Weaver, Gatekeeper, KeyMint and StrongBox interfaces;
+- Virtual A/B, dynamic partitions and A/B recovery partitions;
+- MTP, ADB, touch, brightness, vibration, Wi-Fi and reboot adaptations;
+- isolation checks for shared and device-specific patches.
 
-```text
-twrp_device_sm8850/
-├── README.md
-├── README_EN.md
-├── device/
-│   ├── xiaomi/
-│   │   ├── annibale/
-│   │   ├── myron/
-│   │   └── nezha/
-│   └── realme/
-│       └── RE6402L1/
-├── patches/
-│   ├── common/              # Shared recovery changes
-│   ├── annibale/            # Redmi K90 notes and device changes
-│   ├── myron/               # Redmi K90 Pro Max notes and device changes
-│   ├── nezha/               # Xiaomi 17 Ultra decryption changes
-│   └── neo8/                # realme Neo8 recovery/vold changes
-├── docs/
-│   ├── BUILD.md
-│   ├── PATCHES.md
-│   ├── xiaomi-annibale.md
-│   ├── xiaomi-myron.md
-│   ├── xiaomi-nezha.md
-│   └── realme-neo8.md
-└── scripts/
-    ├── apply-patches.sh
-    ├── build.sh
-    └── check-patch-isolation.sh
-```
+Implementation details, supported scope and device differences are documented in:
 
-## Patch scope
-
-- `patches/common`: shared recovery framework, partition handling, UI, reboot and Weaver extension points.
-- `patches/myron`: Myron-only MTP composite handling and a fail-closed key-upgrade guard; no complete vold replacement or persistent keystore access.
-- `patches/annibale`: stock vold; no KeyMint environment switching from another device.
-- `patches/nezha`: Xiaomi 17 Ultra KeyMint environment and key-storage protection.
-- `patches/neo8`: realme Neo8 TMS/SPU, OPlus Weaver, DRM, init and KeyMint changes.
-
-See [PATCHES.md](docs/PATCHES.md) for details. The Patch isolation workflow checks that common and per-device directories do not acquire cross-device implementations.
-
-## Main features
-
-- Android 16 FBE and metadata-encryption decryption
-- Weaver, Gatekeeper and KeyMint/StrongBox support
-- Virtual A/B, dynamic partitions and A/B recovery partitions
-- Automatic TWRP restore after a ROM flash
-- MTP, ADB, touch, brightness, vibration and Wi-Fi adaptations
-- Pre-decrypt waiting, failure retry and reboot-cleanup hooks
-
-## Device documentation
-
+- [Build guide](docs/BUILD.md)
+- [Patch documentation](docs/PATCHES.md)
 - [Redmi K90 / annibale](docs/xiaomi-annibale.md)
 - [Redmi K90 Pro Max / myron](docs/xiaomi-myron.md)
 - [Xiaomi 17 Ultra / nezha](docs/xiaomi-nezha.md)
 - [realme Neo8 / RE6402L1](docs/realme-neo8.md)
 
-## Unbricking
+## Data recovery
 
-If the system boots to the launcher but every app says "not responding, wait after reboot" (the lock-screen key blob is dead and /data cannot be decrypted), don't wipe data yet. Try [spblob-rescue](https://github.com/MissMyTime/spblob-rescue): run it in recovery to switch the lock-screen key to the backup one, reboot, unlock once with your normal password and your data is back.
+If Android reaches the launcher but every app continues to report that it must wait after reboot, do not format Data immediately. See [spblob-rescue](https://github.com/MissMyTime/spblob-rescue) to determine whether the active Synthetic Password protector has failed.
 
 ## Discussion and feedback
 
-- XDA: [POCO F8 Ultra / Redmi K90 Pro Max (myron)](https://xdaforums.com/t/twrp-3-7-1-for-poco-f8-ultra-redmi-k90-pro-max-myron-android-16-fbe-decrypt.4795272/)
-- XDA: [Xiaomi 17 Ultra (nezha)](https://xdaforums.com/t/twrp-3-7-1-for-xiaomi-17-ultra-nezha-android-16-fbe-decrypt.4795275/)
-- XDA: [realme Neo8 (RE6402L1)](https://xdaforums.com/t/twrp-3-7-1-for-realme-neo8-re6402l1-android-16-fbe-decrypt.4795276/)
-- 4PDA: [realme Neo8 discussion thread](https://4pda.to/forum/index.php?showtopic=1109949)
-- GitHub: [Issues](https://github.com/MissMyTime/twrp_device_sm8850/issues)
+- [GitHub Issues](https://github.com/MissMyTime/twrp_device_sm8850/issues)
+- [POCO F8 Ultra / Redmi K90 Pro Max](https://xdaforums.com/t/twrp-3-7-1-for-poco-f8-ultra-redmi-k90-pro-max-myron-android-16-fbe-decrypt.4795272/)
+- [Xiaomi 17 Ultra](https://xdaforums.com/t/twrp-3-7-1-for-xiaomi-17-ultra-nezha-android-16-fbe-decrypt.4795275/)
+- [realme Neo8](https://xdaforums.com/t/twrp-3-7-1-for-realme-neo8-re6402l1-android-16-fbe-decrypt.4795276/)
+- [realme Neo8 discussion on 4PDA](https://4pda.to/forum/index.php?showtopic=1109949)
 
 ## Contributing
 
-1. Add the complete device tree under `device/<vendor>/<codename>/`.
-2. Add its device document under `docs/`.
-3. Put shared changes in `patches/common/` and device-specific changes in `patches/<device>/`.
-4. Update the supported-device table and run `scripts/check-patch-isolation.sh`.
+Keep shared changes separate from per-device implementations and run:
+
+```bash
+scripts/check-patch-isolation.sh
+```
 
 ## Credits
 
