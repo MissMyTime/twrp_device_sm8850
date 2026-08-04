@@ -1,9 +1,7 @@
 # Qualcomm SM8750 / SM8850 Android 16 TWRP 设备树与源码补丁
 
 > 面向 Xiaomi 与 realme 新平台设备的 TWRP 3.7.1 / Android 16 适配仓库
-
-[![Patch isolation](https://github.com/MissMyTime/twrp_device_sm8850/actions/workflows/patch-isolation.yml/badge.svg)](https://github.com/MissMyTime/twrp_device_sm8850/actions/workflows/patch-isolation.yml)
-[![酷安](./.github/assets/coolapk.svg)](https://www.coolapk.com/u/4327352)
+> 
 [![反馈](./.github/assets/discuss.svg)](https://github.com/MissMyTime/twrp_device_sm8850/issues)
 
 本仓库包含四台设备的完整设备树，以及适配 Android 16 / API 36 / BP2A 所需的 TWRP 源码修改。设备专属的解密、启动和图形栈改动已分开维护，构建时只应用公共补丁与目标机型补丁。
