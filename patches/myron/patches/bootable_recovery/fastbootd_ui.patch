@@ -1,0 +1,44 @@
+diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
+--- a/gui/theme/common/portrait.xml
++++ b/gui/theme/common/portrait.xml
+@@ -3111,9 +3111,8 @@
+ 					<condition var1="tw_fastboot_mode" var2="1"/>
+ 					<actions>
+ 						<action function="set">tw_back=fastbootreboot</action>
+-						<action function="set">tw_action=reboot</action>
+-						<action function="set">tw_action_param=fastboot</action>
+-						<action function="set">tw_reboot_param=fastboot</action>
++						<action function="set">tw_action=cmd</action>
++						<action function="set">tw_action_param=/system/bin/myron-reboot-fastbootd.sh</action>
+ 						<action function="set">tw_has_action2=0</action>
+ 						<action function="set">tw_action_text1={@rebooting=Rebooting...}</action>
+ 						<action function="set">tw_complete_text1={@rebooting=Rebooting...}</action>
+@@ -3240,9 +3239,8 @@
+ 					<condition var1="tw_fastboot_mode" var2="1"/>
+ 					<actions>
+ 						<action function="set">tw_back=reboot</action>
+-						<action function="set">tw_action=reboot</action>
+-						<action function="set">tw_action_param=fastboot</action>
+-						<action function="set">tw_reboot_param=fastboot</action>
++						<action function="set">tw_action=cmd</action>
++						<action function="set">tw_action_param=/system/bin/myron-reboot-fastbootd.sh</action>
+ 						<action function="set">tw_has_action2=0</action>
+ 						<action function="set">tw_text1={@no_os1=No OS Installed! Are you}</action>
+ 						<action function="set">tw_text2={@no_osrb=sure you wish to reboot?}</action>
+diff --git a/gui/theme/extra-languages/languages/zh_CN.xml b/gui/theme/extra-languages/languages/zh_CN.xml
+--- a/gui/theme/extra-languages/languages/zh_CN.xml
++++ b/gui/theme/extra-languages/languages/zh_CN.xml
+@@ -734,10 +734,10 @@
+ 		<string name="flash_ab_both_slots">刷入到 2 个槽位</string>
+ 		<string name="ozip_decrypt_decryption">正在解密 Ozip…</string>
+ 		<string name="ozip_decrypt_finish">Ozip 解密完成！</string>
+-		<string name="fastboot_button">Fastboot</string>
++		<string name="fastboot_button">Fastbootd</string>
+ 		<string name="enable_adb">启用 ADB</string>
+ 		<string name="enable_fastboot">启用 Fastboot</string>
+-		<string name="fastboot_console_msg">进入 Fastboot 模式…</string>
++		<string name="fastboot_console_msg">进入 Fastbootd 模式…</string>
+ 		<!-- Android Rescue Party trigger -->
+ 		<string name="rescue_party0">Android 救援程序已触发！您可以尝试下面的操作：</string>
+ 		<string name="rescue_party1"> 1. 清除 Cache；</string>
+

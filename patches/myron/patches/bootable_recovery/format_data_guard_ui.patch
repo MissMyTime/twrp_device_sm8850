@@ -1,7 +1,7 @@
 diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 --- a/gui/theme/common/portrait.xml
 +++ b/gui/theme/common/portrait.xml
-@@ -1234,21 +1234,143 @@
+@@ -1234,21 +1234,290 @@
  		<page name="formatdata_confirm">
  			<action>
  				<condition var1="tw_confirm_formatdata" op="=" var2="yes"/>
@@ -14,6 +14,7 @@ diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 -					<action function="page">action_page</action>
 +					<action function="set">tw_operation_state=0</action>
 +					<action function="set">tw_operation_status=1</action>
++					<action function="set">tw_vab_guard_started=0</action>
 +					<action function="page">formatdata_vab_check</action>
  				</actions>
  			</action>
@@ -40,8 +41,14 @@ diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 +			<template name="progress_bar"/>
 +
 +			<action>
-+				<condition var1="tw_operation_state" op="=" var2="0"/>
-+				<action function="cmd">/system/bin/twrp-vab-format-guard.sh</action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="0"/>
++					<condition var1="tw_vab_guard_started" op="=" var2="0"/>
++				</conditions>
++				<actions>
++					<action function="set">tw_vab_guard_started=1</action>
++					<action function="cmd">/system/bin/twrp-vab-format-guard.sh</action>
++				</actions>
 +			</action>
 +
 +			<action>
@@ -119,7 +126,7 @@ diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 +
 +			<text style="text_m_fail">
 +				<placement x="%center_x%" y="%row5_y%" placement="5"/>
-+				<text>{@format_data_vab_blocked_1=Pending A/B OTA snapshot detected.}</text>
++				<text>{@format_data_vab_blocked_1=Virtual A/B snapshot state detected.}</text>
 +			</text>
 +
 +			<text style="text_m">
@@ -132,10 +139,16 @@ diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 +				<text>{@format_data_vab_blocked_3=Format Data was cancelled to protect the ROM.}</text>
 +			</text>
 +
-+			<button style="main_button">
-+				<placement x="%indent%" y="%row19_y%"/>
++			<button style="main_button_half_height">
++				<placement x="%indent%" y="%row18a_y%"/>
 +				<text>{@back_btn=Back}</text>
 +				<action function="page">formatdata</action>
++			</button>
++
++			<button style="main_button_half_height">
++				<placement x="%center_x%" y="%row18a_y%"/>
++				<text>{@format_data_vab_force_btn=Custom ROM / Force Format}</text>
++				<action function="page">formatdata_vab_force_warning</action>
 +			</button>
 +
 +			<action>
@@ -149,5 +162,185 @@ diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
 +			</action>
 +		</page>
 +
++		<page name="formatdata_vab_force_warning">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_vab_force_hdr=Force Format Data}</text>
++			</text>
++
++			<text style="text_m_fail">
++				<placement x="%center_x%" y="%row6_y%" placement="5"/>
++				<text>{@format_data_vab_force_1=Only use this after installing a custom ROM.}</text>
++			</text>
++
++			<text style="text_m_fail">
++				<placement x="%center_x%" y="%row8_y%" placement="5"/>
++				<text>{@format_data_vab_force_2=Do not continue while an OTA is merging.}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row10_y%" placement="5"/>
++				<text>{@format_data_vab_force_3=The pending system update may be destroyed.}</text>
++			</text>
++
++			<text style="text_m_accent">
++				<placement x="%center_x%" y="%row12_y%" placement="5"/>
++				<text>{@format_data_undo=This cannot be undone.}</text>
++			</text>
++
++			<button style="main_button_half_height">
++				<placement x="%indent%" y="%row18a_y%"/>
++				<text>{@back_btn=Back}</text>
++				<action function="page">formatdata_vab_blocked</action>
++			</button>
++
++			<button style="main_button_half_height">
++				<placement x="%center_x%" y="%row18a_y%"/>
++				<text>{@format_data_vab_force_confirm=I understand the risk}</text>
++				<actions>
++					<action function="set">tw_operation_state=0</action>
++					<action function="set">tw_operation_status=1</action>
++					<action function="set">tw_vab_guard_started=0</action>
++					<action function="page">formatdata_vab_force_check</action>
++				</actions>
++			</button>
++
++			<action>
++				<touch key="home"/>
++				<action function="page">main</action>
++			</action>
++
++			<action>
++				<touch key="back"/>
++				<action function="page">formatdata_vab_blocked</action>
++			</action>
++		</page>
++
++		<page name="formatdata_vab_force_check">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_vab_force_hdr=Force Format Data}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row7_y%" placement="5"/>
++				<text>{@format_data_undo=This cannot be undone.}</text>
++			</text>
++
++			<template name="progress_bar"/>
++
++			<action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="0"/>
++					<condition var1="tw_vab_guard_started" op="=" var2="0"/>
++				</conditions>
++				<actions>
++					<action function="set">tw_vab_guard_started=1</action>
++					<action function="cmd">/system/bin/twrp-vab-format-guard.sh --force</action>
++				</actions>
++			</action>
++
++			<action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="1"/>
++					<condition var1="tw_operation_status" op="=" var2="0"/>
++				</conditions>
++				<action function="page">formatdata_vab_ready</action>
++			</action>
++
++			<action>
++				<conditions>
++					<condition var1="tw_operation_state" op="=" var2="1"/>
++					<condition var1="tw_operation_status" op="!=" var2="0"/>
++				</conditions>
++				<action function="page">formatdata_vab_merging</action>
++			</action>
++		</page>
++
++		<page name="formatdata_vab_merging">
++			<template name="page"/>
++
++			<text style="text_l">
++				<placement x="%col1_x_header%" y="%row3_header_y%"/>
++				<text>{@format_data_vab_merging_hdr=Format Data Still Blocked}</text>
++			</text>
++
++			<text style="text_m_fail">
++				<placement x="%center_x%" y="%row7_y%" placement="5"/>
++				<text>{@format_data_vab_merging_1=A Virtual A/B snapshot is actively merging.}</text>
++			</text>
++
++			<text style="text_m">
++				<placement x="%center_x%" y="%row9_y%" placement="5"/>
++				<text>{@format_data_vab_merging_2=Wait for the merge to finish before formatting.}</text>
++			</text>
++
++			<button style="main_button">
++				<placement x="%indent%" y="%row19_y%"/>
++				<text>{@back_btn=Back}</text>
++				<action function="page">formatdata_vab_blocked</action>
++			</button>
++
++			<action>
++				<touch key="home"/>
++				<action function="page">main</action>
++			</action>
++
++			<action>
++				<touch key="back"/>
++				<action function="page">formatdata_vab_blocked</action>
++			</action>
++		</page>
++
  		<page name="wlan_password">
  		    <template name="page"/>
+
+
+diff --git a/gui/theme/common/languages/en.xml b/gui/theme/common/languages/en.xml
+--- a/gui/theme/common/languages/en.xml
++++ b/gui/theme/common/languages/en.xml
+@@ -791,5 +791,18 @@
+ 		<string name="wlan_start_service_btn">Start Service</string>
+ 		<string name="select_wlan_hdr">Select WLAN to Connect</string>
+ 		<string name="next_btn">Next</string>
++		<string name="format_data_vab_blocked_hdr">Format Data Blocked</string>
++		<string name="format_data_vab_blocked_1">Virtual A/B snapshot state detected.</string>
++		<string name="format_data_vab_blocked_2">Boot the newly installed system first.</string>
++		<string name="format_data_vab_blocked_3">Format Data was cancelled to protect the ROM.</string>
++		<string name="format_data_vab_force_btn">Custom ROM / Force Format</string>
++		<string name="format_data_vab_force_hdr">Force Format Data</string>
++		<string name="format_data_vab_force_1">Use this only after installing a custom ROM.</string>
++		<string name="format_data_vab_force_2">Do not continue while an OTA snapshot is merging.</string>
++		<string name="format_data_vab_force_3">A pending system update may be damaged.</string>
++		<string name="format_data_vab_force_confirm">I Understand the Risk</string>
++		<string name="format_data_vab_merging_hdr">Format Data Still Blocked</string>
++		<string name="format_data_vab_merging_1">Virtual A/B snapshot merge is in progress.</string>
++		<string name="format_data_vab_merging_2">Wait for the merge to finish before formatting.</string>
+ 	</resources>
+ </language>
+diff --git a/gui/theme/extra-languages/languages/zh_CN.xml b/gui/theme/extra-languages/languages/zh_CN.xml
+--- a/gui/theme/extra-languages/languages/zh_CN.xml
++++ b/gui/theme/extra-languages/languages/zh_CN.xml
+@@ -784,5 +784,18 @@
+ 		<string name="wlan_start_service_btn">启动服务</string>
+ 		<string name="select_wlan_hdr">选择需要连接的WiFi</string>
+ 		<string name="next_btn">下一步</string>
++		<string name="format_data_vab_blocked_hdr">已阻止格式化 Data</string>
++		<string name="format_data_vab_blocked_1">检测到 Virtual A/B 快照状态。</string>
++		<string name="format_data_vab_blocked_2">请先启动新安装的系统。</string>
++		<string name="format_data_vab_blocked_3">为保护系统，已取消格式化 Data。</string>
++		<string name="format_data_vab_force_btn">类原生／强制格式化</string>
++		<string name="format_data_vab_force_hdr">强制格式化 Data</string>
++		<string name="format_data_vab_force_1">仅在安装类原生系统后使用此功能。</string>
++		<string name="format_data_vab_force_2">OTA 正在合并时请勿继续。</string>
++		<string name="format_data_vab_force_3">待处理的系统更新可能会被破坏。</string>
++		<string name="format_data_vab_force_confirm">我已了解风险</string>
++		<string name="format_data_vab_merging_hdr">仍然禁止格式化 Data</string>
++		<string name="format_data_vab_merging_1">Virtual A/B 快照正在合并。</string>
++		<string name="format_data_vab_merging_2">请等待合并完成后再格式化。</string>
+ 	</resources>
+ </language>

@@ -1,0 +1,49 @@
+diff --git a/gui/theme/portrait_hdpi/ui.xml b/gui/theme/portrait_hdpi/ui.xml
+--- a/gui/theme/portrait_hdpi/ui.xml
++++ b/gui/theme/portrait_hdpi/ui.xml
+@@ -73,6 +73,7 @@
+ 
+ 	<variables>
+ 		<variable name="tw_samsung_navbar" value="0" persist="1"/>
++		<variable name="tw_myron_mtp_autostart_done" value="0"/>
+ 
+ 		<variable name="tw_hide_kb" value="0"/>
+ 		<variable name="screen_width" value="1080"/>
+diff --git a/gui/theme/common/portrait.xml b/gui/theme/common/portrait.xml
+--- a/gui/theme/common/portrait.xml
++++ b/gui/theme/common/portrait.xml
+@@ -185,6 +185,34 @@
+ 		<page name="main2">
+ 			<template name="page"/>
+ 
++			<action>
++				<conditions>
++					<condition var1="tw_has_mtp" var2="1"/>
++					<condition var1="tw_is_decrypted" var2="1"/>
++					<condition var1="tw_mtp_enabled" var2="0"/>
++					<condition var1="tw_myron_mtp_autostart_done" var2="0"/>
++				</conditions>
++				<actions>
++					<action function="set">tw_myron_mtp_autostart_done=1</action>
++					<action function="sleep">500000</action>
++					<action function="startmtp"/>
++				</actions>
++			</action>
++
++			<action>
++				<conditions>
++					<condition var1="tw_has_mtp" var2="1"/>
++					<condition var1="tw_is_encrypted" var2="0"/>
++					<condition var1="tw_mtp_enabled" var2="0"/>
++					<condition var1="tw_myron_mtp_autostart_done" var2="0"/>
++				</conditions>
++				<actions>
++					<action function="set">tw_myron_mtp_autostart_done=1</action>
++					<action function="sleep">500000</action>
++					<action function="startmtp"/>
++				</actions>
++			</action>
++
+ 			<text style="text_l">
+ 				<placement x="%col1_x_header%" y="%row3_header_y%"/>
+ 				<text>{@twrp_header=Team Win Recovery Project}</text>

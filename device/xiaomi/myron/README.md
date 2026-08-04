@@ -40,6 +40,16 @@
 - 简体中文界面下 Czech、Greek、Ukrainian 使用稳定英文显示名，语言内容不变。
 - 增加 Myron 专属双鱼开屏图标。
 
+## 2026-08-04 修复
+
+- 补齐官方 Myron Global vendor 中的 QTI KeyMint 运行依赖，并恢复 KeyMint、Gatekeeper 的 stock 服务身份。
+- 保持 QTI + NXP 解密链不变；Evolution X 17 只在已有 fscrypt 策略完全匹配时继续解密，不替换策略、不升级密钥。
+- 解密成功后单次自动启动 MTP；EvoX 下增加短时 USB gadget 状态恢复。
+- U 盘使用结束后恢复 peripheral 模式及原有 ADB/MTP 组合，隐藏空的 USB-OTG 父项并保留真实分区。
+- 修正 CPU 温度节点，EvoX 解密后按 ATS 偏移恢复 recovery 时间。
+- Fastbootd 菜单改用经回读验证的 BCB 请求。
+- Format Data 三态保护：`none` 正常允许；`merging` 禁止绕过；其他快照状态需“类原生／强制格式化”二次确认。
+
 ## 构建
 
 ```bash

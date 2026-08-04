@@ -22,25 +22,31 @@ Myron uses QTI KeyMint with NXP StrongBox and Weaver services. The recovery tree
 
 The recovery starts the secure-element services in the verified order, avoids an early default-password attempt before the Data mapping exists, and creates the media bind only after successful FBE decryption. These changes improve official HyperOS and AOSP compatibility without writing recovery-generated KeyMint upgrades back to user data.
 
+The QTI support libraries and service identities are taken from the official Myron Global vendor image. Evolution X 17 compatibility is limited to accepting an existing fscrypt policy only when the kernel reports an exact byte-for-byte match; it does not replace policies or persist upgraded key blobs.
+
 ## Storage and flashing
 
 - Data and Metadata include F2FS check, repair and format tools.
 - Internal Storage and Dalvik/ART Cache are treated as virtual wipe entries, not standalone block devices.
-- Duplicate USB-OTG entries are removed so `/data/media` remains the internal storage target.
+- The USB-OTG wildcard parent is hidden while real removable child volumes remain selectable, so multi-partition drives work without an empty storage entry.
 - Legacy installers receive `/sbin/sh`, `/sbin/bash`, `/sbin/bas` and `/sbin/getprop` compatibility paths.
 - Official A/B packages only prepare the new slot after a successful install.
 - LP metadata capacity is checked before and after an OTA. Repair is limited to an undersized, single-device Super layout and is refused while a Virtual A/B update is active.
 - Raw Super flashing unmaps dynamic partitions before opening the physical block device.
-- Format Data uses a bounded userspace snapshot check followed by a separate explicit confirmation. The recovery UI thread never blocks waiting for BootControl.
+- Format Data uses a bounded userspace snapshot check followed by a separate explicit confirmation. `none` permits formatting, `merging` always blocks it, and `snapshotted`, `cancelled`, `unknown` or an unrecognized state require the custom-ROM force confirmation.
 
 ## Connectivity and hardware
 
-- MTP and ADB use the Myron-only `twrp_mtp_adb` composite mode.
+- MTP and ADB use the Myron-only `twrp_mtp_adb` composite mode. MTP starts once after successful decryption, or immediately when Data is not encrypted, without changing the saved user preference.
+- Removing an OTG drive restores peripheral mode and rebinds the previous ADB/MTP composition.
 - Duplicate Sideload USB property handlers are removed to avoid the first-session disconnect.
 - WLAN mounts the active slot's `system_dlkm` and `vendor_dlkm`, loads matching runtime modules when available, and falls back to recovery modules.
 - DHCP configures IPv4, the default route and DNS, then publishes a lease state file.
 - Brightness uses `/sys/class/backlight/panel0-backlight/brightness` with a verified maximum of `16383`.
 - Force-feedback effects are recreated for every vibration request and no unsolicited first-touch probe is emitted.
+- CPU temperature uses the verified `thermal_zone68` node.
+- Evolution X 17 recovery time is restored from its persisted ATS offset after decryption.
+- The Fastbootd menu writes and verifies the recovery BCB request before rebooting to userspace fastboot.
 - The Myron theme includes stable language labels and the device-specific koi splash.
 
 ## Build

@@ -69,6 +69,7 @@ on boot
     # ADB over USB
     setprop sys.usb.config adb
     setprop sys.usb.configfs 1
+    start myron-usb-role-recover
 
     chmod 0755 /sbin/iw
     chmod 0755 /sbin/wifi-dhcp.sh
@@ -92,6 +93,13 @@ on property:recovery.perf.mode=1
 # TWRP sets twrp.modules.loaded=true after loading kernel modules.
 # -----------------------------------------------------------------------------
 on property:twrp.modules.loaded=true
+    # TWRP briefly mounts persist while probing partitions, then unmounts it.
+    # QSEECom starts later and requires the vendor persist path to stay mounted.
+    mkdir /mnt/vendor 0775 shell system
+    mkdir /mnt/vendor/persist 0775 shell system
+    mount ext4 /dev/block/bootdevice/by-name/persist /persist noatime nosuid nodev barrier=1
+    mount none /persist /mnt/vendor/persist bind
+
     # Mount modem firmware (slot-aware)
     mount vfat /dev/block/bootdevice/by-name/modem${ro.boot.slot_suffix} /vendor/firmware_mnt ro
     mount none /vendor/firmware_mnt /firmware bind
@@ -148,6 +156,14 @@ on property:servicemanager.ready=true
 on property:sys.boot_completed=1
     start myron-nxp-gate
 
+# These helpers are limited to Evolution X Android 17 by their own cmdline
+# checks and exit immediately on the stock HyperOS path.
+on property:twrp.all.users.decrypted=true
+    start myron-evox-time-fix
+
+on property:sys.usb.config=twrp_mtp_adb
+    start myron-evox-mtp-keeper
+
 # -----------------------------------------------------------------------------
 # myron-specific services
 # -----------------------------------------------------------------------------
@@ -168,4 +184,27 @@ service myron-nxp-gate /system/bin/myron-nxp-gate.sh
     oneshot
     user root
     group root shell
+    seclabel u:r:recovery:s0
+
+service myron-evox-time-fix /system/bin/myron-evox-time-fix.sh
+    disabled
+    oneshot
+    user root
+    group root system
+    seclabel u:r:recovery:s0
+
+service myron-evox-mtp-keeper /system/bin/myron-evox-mtp-keeper.sh
+    disabled
+    oneshot
+    user root
+    group root system shell
+    seclabel u:r:recovery:s0
+
+# Restore the recovery USB gadget after returning from OTG host mode.
+service myron-usb-role-recover /system/bin/myron-usb-role-recover.sh
+    class main
+    user root
+    group root shell system usb
+    disabled
+    oneshot
     seclabel u:r:recovery:s0

@@ -51,7 +51,8 @@ PRODUCT_PACKAGES += \
     mkfs.f2fs \
     sload_f2fs \
     fsck.erofs \
-    strace
+    strace \
+    tzdata_prebuilt
 
 # -----------------------------------------------------------------------------
 # Recovery fstab
@@ -95,6 +96,10 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-dhcp.sh:recovery/root/system/bin/wifi-dhcp.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-load-modules.sh:recovery/root/system/bin/wifi-load-modules.sh \
+    $(DEVICE_PATH)/prebuilt/system/bin/myron-evox-mtp-keeper.sh:recovery/root/system/bin/myron-evox-mtp-keeper.sh \
+    $(DEVICE_PATH)/prebuilt/system/bin/myron-evox-time-fix.sh:recovery/root/system/bin/myron-evox-time-fix.sh \
+    $(DEVICE_PATH)/prebuilt/system/bin/myron-reboot-fastbootd.sh:recovery/root/system/bin/myron-reboot-fastbootd.sh \
+    $(DEVICE_PATH)/prebuilt/system/bin/myron-usb-role-recover.sh:recovery/root/system/bin/myron-usb-role-recover.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/twrp-vab-format-guard.sh:recovery/root/system/bin/twrp-vab-format-guard.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/wpa_cli:recovery/root/system/bin/wpa_cli \
     $(DEVICE_PATH)/prebuilt/system/bin/iw:recovery/root/system/bin/iw

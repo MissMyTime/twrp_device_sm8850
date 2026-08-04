@@ -1,0 +1,59 @@
+diff --git a/libfscrypt/fscrypt.cpp b/libfscrypt/fscrypt.cpp
+--- a/libfscrypt/fscrypt.cpp
++++ b/libfscrypt/fscrypt.cpp
+@@ -298,6 +298,30 @@ static std::string PolicyDebugString(const EncryptionPolicy& policy) {
+     return ss.str();
+ }
+ 
++static bool IsEvolutionXAndroid17() {
++    std::string cmdline;
++    if (!android::base::ReadFileToString("/proc/cmdline", &cmdline)) return false;
++    return cmdline.find("swinfo.fingerprint=EvolutionX-17.") != std::string::npos ||
++           cmdline.find("mtdoops.fingerprint=EvolutionX-17.") != std::string::npos ||
++           cmdline.find("bootmonitor.fingerprint=EvolutionX-17.") != std::string::npos;
++}
++
++static bool ExistingPolicyMatches(int fd, const fscrypt_policy_v1& expected) {
++    fscrypt_get_policy_ex_arg current = {};
++    current.policy_size = sizeof(current.policy);
++    if (ioctl(fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &current) != 0) return false;
++    return current.policy.version == FSCRYPT_POLICY_V1 &&
++           memcmp(&current.policy.v1, &expected, sizeof(expected)) == 0;
++}
++
++static bool ExistingPolicyMatches(int fd, const fscrypt_policy_v2& expected) {
++    fscrypt_get_policy_ex_arg current = {};
++    current.policy_size = sizeof(current.policy);
++    if (ioctl(fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &current) != 0) return false;
++    return current.policy.version == FSCRYPT_POLICY_V2 &&
++           memcmp(&current.policy.v2, &expected, sizeof(expected)) == 0;
++}
++
+ static int GetFilesystemBlockSize(const std::string& path) {
+     struct statvfs info;
+     if (statvfs(path.c_str(), &info) == 0) {
+@@ -370,6 +394,24 @@ bool EnsurePolicy(const EncryptionPolicy& policy, const std::string& directory)
+     // unencrypted; otherwise it will verify that the existing policy matches.
+     // Setting the policy will fail if the directory is already nonempty.
+     if (ioctl(fd, FS_IOC_SET_ENCRYPTION_POLICY, &kern_policy) != 0) {
++        const int policy_errno = errno;
++
++        // Android 17 may leave /data/media/<user> populated before recovery
++        // prepares CE storage.  Some vendor kernels return ENOTEMPTY here even
++        // when the directory already carries the requested policy.  Accept
++        // only a byte-for-byte matching policy; never replace or upgrade it.
++        if (policy_errno == ENOTEMPTY && IsEvolutionXAndroid17()) {
++            const bool matches = policy.options.version == 1
++                    ? ExistingPolicyMatches(fd, kern_policy.v1)
++                    : ExistingPolicyMatches(fd, kern_policy.v2);
++            if (matches) {
++                LOG(INFO) << "Verified existing Android 17 encryption policy on " << directory
++                          << ": " << PolicyDebugString(policy);
++                return true;
++            }
++        }
++
++        errno = policy_errno;
+         std::string reason;
+         switch (errno) {
+             case EEXIST:

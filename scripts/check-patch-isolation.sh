@@ -102,8 +102,21 @@ for set_name in annibale myron; do
 done
 
 assert_no_match \
-    'setRecoveryKeyMintEnvironment|usePersistentKeystoreDatabase|MS_BIND' \
+    'setRecoveryKeyMintEnvironment|usePersistentKeystoreDatabase|MS_BIND|spblob-rescue|metadata_key_rescue' \
     "$REPO_ROOT/patches/myron" "$REPO_ROOT/device/xiaomi/myron"
+
+myron_evox_patch="$REPO_ROOT/patches/myron/patches/system_extras/evox_android17_fscrypt_policy.patch"
+[ -f "$myron_evox_patch" ] || \
+    fail "Myron Evolution X 17 fscrypt compatibility patch is missing"
+grep -q 'IsEvolutionXAndroid17' "$myron_evox_patch" || \
+    fail "Myron Evolution X 17 fingerprint gate is missing"
+grep -q 'ExistingPolicyMatches' "$myron_evox_patch" || \
+    fail "Myron existing fscrypt policy verification is missing"
+grep -q 'memcmp(&current.policy.v2, &expected, sizeof(expected)) == 0' "$myron_evox_patch" || \
+    fail "Myron fscrypt v2 policy must be compared byte for byte"
+assert_no_match \
+    'fscrypt_prepare_user_storage|Keeping the existing unlocked media directory' \
+    "$REPO_ROOT/patches/myron"
 
 grep -q 'setprop ctl.start adbd' \
     "$REPO_ROOT/patches/common/files/bootable/recovery/partitionmanager.cpp" || \
@@ -115,6 +128,15 @@ fi
 grep -q 'setprop sys.usb.config twrp_mtp_adb' \
     "$REPO_ROOT/patches/myron/patches/bootable_recovery/mtp_composite.patch" || \
     fail "Myron MTP composite override is missing"
+[ -f "$REPO_ROOT/patches/myron/patches/bootable_recovery/mtp_autostart_after_decrypt.patch" ] || \
+    fail "Myron post-decrypt MTP startup patch is missing"
+grep -q 'tw_is_decrypted' \
+    "$REPO_ROOT/patches/myron/patches/bootable_recovery/mtp_autostart_after_decrypt.patch" || \
+    fail "Myron MTP startup must wait for decryption"
+if grep -q 'mPersist.SetValue("tw_mtp_enabled", "1")' \
+        "$REPO_ROOT/patches/myron/patches/bootable_recovery/mtp_autostart_after_decrypt.patch"; then
+    fail "Myron MTP startup must not overwrite the saved user preference"
+fi
 [ ! -e "$REPO_ROOT/patches/neo8/patches/bootable_recovery/mtp_composite.patch" ] || \
     fail "Neo8 must use the standard common MTP path"
 
@@ -126,6 +148,12 @@ grep -q '/system/bin/twrp-vab-format-guard.sh' \
 grep -q 'get-snapshot-merge-status' \
     "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/twrp-vab-format-guard.sh" || \
     fail "Myron Virtual A/B snapshot check is missing"
+grep -q 'snapshot state is merging; force format is forbidden' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/twrp-vab-format-guard.sh" || \
+    fail "Myron merging state must never permit force format"
+grep -q 'format_data_vab_force_btn' \
+    "$REPO_ROOT/patches/myron/patches/bootable_recovery/format_data_guard_ui.patch" || \
+    fail "Myron custom-ROM force-format confirmation is missing"
 
 if sed -n \
         '/int TWPartitionManager::Format_Data(void)/,/int TWPartitionManager::Wipe_Media_From_Data(void)/p' \
@@ -146,6 +174,34 @@ grep -q 'mount_runtime_partition vendor_dlkm' \
 grep -q 'wifi-dhcp.lease' \
     "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/wifi-dhcp.sh" || \
     fail "Myron WLAN lease publication is missing"
+
+for helper in \
+    myron-evox-mtp-keeper.sh \
+    myron-evox-time-fix.sh \
+    myron-reboot-fastbootd.sh \
+    myron-usb-role-recover.sh; do
+    [ -x "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/$helper" ] || \
+        fail "Myron helper must be executable: $helper"
+done
+grep -q 'EvolutionX-17' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/myron-evox-time-fix.sh" || \
+    fail "Myron EvoX time helper must remain fingerprint-gated"
+grep -q 'EvolutionX-17' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/myron-evox-mtp-keeper.sh" || \
+    fail "Myron EvoX MTP helper must remain fingerprint-gated"
+grep -q 'boot-fastboot' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/myron-reboot-fastbootd.sh" || \
+    fail "Myron Fastbootd BCB request is missing"
+
+printf '%s  %s\n' \
+    '39b6f96e4ef240066464ccf3223dd0119b2922c279a878a3af74bd79349136d8' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/vendor/lib64/libqmi_encdec.so" \
+    'adbe20f901278a8a122bb12493e7a16901ece6d8afee7e2a34d24037ce12ddf9' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/vendor/lib64/libtaautoload.so" \
+    'edc9bd9ac85b9cfa69607873824166173078a5da96e11e7b3ce452261b6d339d' \
+    "$REPO_ROOT/device/xiaomi/myron/prebuilt/vendor/etc/ssg/ta_config.json" | \
+    sha256sum -c - >/dev/null || \
+    fail "Myron official QTI runtime files do not match the verified vendor image"
 
 for file in \
     prebuilt/odm/bin/hw/android.hardware.weaver-service.thales \

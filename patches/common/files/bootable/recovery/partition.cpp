@@ -3313,7 +3313,9 @@ bool TWPartition::Find_Wildcard_Block_Devices(const string& Device) {
 		part->Wildcard_Block_Device = false;
 		part->Is_SubPartition = true;
 		part->SubPartition_Of = Mount_Point;
-		part->Is_Storage = Is_Storage;
+		// A wildcard USB parent can be hidden from the storage picker while its
+		// real block-device children remain selectable.
+		part->Is_Storage = Is_Storage || collapse_usb_otg;
 		part->Can_Be_Mounted = true;
 		part->Removable = true;
 		part->Can_Be_Wiped = Can_Be_Wiped;

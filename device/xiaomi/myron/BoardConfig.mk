@@ -374,7 +374,7 @@ TW_USE_BATTERY_SYSFS_STATS := true
 TW_BATTERY_SYSFS_WAIT_SECONDS := 8
 
 TW_USE_LEGACY_BATTERY_SERVICES := true
-TW_CUSTOM_CPU_TEMP_PATH := "/sys/class/thermal/thermal_zone75/temp"
+TW_CUSTOM_CPU_TEMP_PATH := "/sys/class/thermal/thermal_zone68/temp"
 
 # -----------------------------------------------------------------------------
 # 16. Vendor modules
