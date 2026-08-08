@@ -1,4 +1,4 @@
-<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/f8e12059-08cb-4aeb-aa86-d1be8d82380a" /># Qualcomm SM8750 / SM8850 Android 16 TWRP
+# Qualcomm SM8750 / SM8850 Android 16 TWRP
 
 > 面向 Xiaomi 与 realme 新平台设备的 TWRP 3.7.1 / Android 16 设备树与源码补丁
 
