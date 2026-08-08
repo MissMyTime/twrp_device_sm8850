@@ -43,7 +43,8 @@ on fs
     chmod 0664 /dev/ion
     chown system system /dev/ion
 
-    # Mount persist for KeyMint / QSEE credentials
+    # Mount Persist once for TWRP, then expose the vendor path required by QSEE.
+    mkdir /persist 0775 shell system
     mkdir /mnt/vendor 0775 shell system
     mkdir /mnt/vendor/persist 0775 shell system
     wait /dev/block/bootdevice/by-name/persist
@@ -93,13 +94,6 @@ on property:recovery.perf.mode=1
 # TWRP sets twrp.modules.loaded=true after loading kernel modules.
 # -----------------------------------------------------------------------------
 on property:twrp.modules.loaded=true
-    # TWRP briefly mounts persist while probing partitions, then unmounts it.
-    # QSEECom starts later and requires the vendor persist path to stay mounted.
-    mkdir /mnt/vendor 0775 shell system
-    mkdir /mnt/vendor/persist 0775 shell system
-    mount ext4 /dev/block/bootdevice/by-name/persist /persist noatime nosuid nodev barrier=1
-    mount none /persist /mnt/vendor/persist bind
-
     # Mount modem firmware (slot-aware)
     mount vfat /dev/block/bootdevice/by-name/modem${ro.boot.slot_suffix} /vendor/firmware_mnt ro
     mount none /vendor/firmware_mnt /firmware bind
@@ -164,6 +158,10 @@ on property:twrp.all.users.decrypted=true
 on property:sys.usb.config=twrp_mtp_adb
     start myron-evox-mtp-keeper
 
+on property:ro.twrp.fastbootd=1
+    stop myron-evox-mtp-keeper
+    stop myron-usb-role-recover
+
 # -----------------------------------------------------------------------------
 # myron-specific services
 # -----------------------------------------------------------------------------
@@ -200,11 +198,11 @@ service myron-evox-mtp-keeper /system/bin/myron-evox-mtp-keeper.sh
     group root system shell
     seclabel u:r:recovery:s0
 
-# Restore the recovery USB gadget after returning from OTG host mode.
+# Preserve USB host mode while removable storage is connected, then restore
+# the recovery gadget after the cable returns to device mode.
 service myron-usb-role-recover /system/bin/myron-usb-role-recover.sh
     class main
+    disabled
     user root
     group root shell system usb
-    disabled
-    oneshot
     seclabel u:r:recovery:s0

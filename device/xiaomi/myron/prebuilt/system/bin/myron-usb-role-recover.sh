@@ -1,5 +1,7 @@
 #!/system/bin/sh
 
+[ "$(getprop ro.twrp.fastbootd 2>/dev/null)" = 1 ] && exit 0
+
 LOG=/tmp/myron-usb-role-recover.log
 UDC=/config/usb_gadget/g1/UDC
 MODE=/sys/bus/platform/devices/a600000.ssusb/mode
@@ -81,9 +83,14 @@ restore_adb_only() {
 }
 
 seen_host=0
+setprop twrp.usb.host_active 0
 log_line "monitor started"
 
 while true; do
+    if [ "$(getprop ro.twrp.fastbootd 2>/dev/null)" = 1 ]; then
+        exit 0
+    fi
+
     if ! find_role_path; then
         sleep 1
         continue
@@ -92,20 +99,28 @@ while true; do
     role=$(cat "$ROLE" 2>/dev/null)
     case "$role" in
         host)
+            setprop twrp.usb.host_active 1
+            if [ -w "$UDC" ]; then
+                bound_controller=$(cat "$UDC" 2>/dev/null)
+                if [ -n "$bound_controller" ] && [ "$bound_controller" != none ]; then
+                    echo none > "$UDC" 2>/dev/null
+                fi
+            fi
             if [ "$seen_host" != 1 ]; then
                 log_line "USB role entered host mode"
             fi
             seen_host=1
             ;;
-        device)
+        device|peripheral)
             if [ "$seen_host" = 1 ]; then
                 sleep 2
                 role=$(cat "$ROLE" 2>/dev/null)
-                if [ "$role" != device ]; then
+                if [ "$role" != device ] && [ "$role" != peripheral ]; then
                     sleep 1
                     continue
                 fi
 
+                setprop twrp.usb.host_active 0
                 controller=$(getprop sys.usb.controller)
                 if [ -z "$controller" ]; then
                     controller=$(getprop ro.boot.usbcontroller)
@@ -131,8 +146,10 @@ while true; do
                         ;;
                 esac
                 seen_host=0
+            else
+                setprop twrp.usb.host_active 0
             fi
             ;;
     esac
-    sleep 1
+    sleep 0.25
 done

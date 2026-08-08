@@ -1,14 +1,31 @@
 #!/system/bin/sh
 
+[ "$(getprop ro.twrp.fastbootd 2>/dev/null)" = 1 ] && exit 0
+
 grep -Eq '(swinfo|mtdoops|bootmonitor)\.fingerprint=EvolutionX-17\.' /proc/cmdline 2>/dev/null || exit 0
 
 gadget=/config/usb_gadget/g1
 controller="$(getprop sys.usb.controller)"
 [ -n "$controller" ] || controller=a600000.dwc3
 mode=/sys/bus/platform/devices/a600000.ssusb/mode
+role=/sys/class/usb_role/a600000.ssusb-role-switch/role
+
+usb_host_active() {
+    for node in "$role" "$mode"; do
+        [ -r "$node" ] || continue
+        value="$(cat "$node" 2>/dev/null)"
+        [ "$value" = host ] && return 0
+    done
+    [ "$(getprop twrp.usb.host_active)" = 1 ]
+}
 
 i=0
 while [ "$i" -lt 80 ]; do
+    if usb_host_active; then
+        setprop twrp.usb.host_active 1
+        exit 0
+    fi
+
     config="$(getprop sys.usb.config)"
     [ "$config" = twrp_mtp_adb ] || exit 0
 
