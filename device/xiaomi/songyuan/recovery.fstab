@@ -1,0 +1,17 @@
+# Recovery fstab — Redmi K100 Pro Max / songyuan
+
+system                 /system              erofs ro wait,slotselect,logical,first_stage_mount
+system_ext             /system_ext          erofs ro wait,slotselect,logical,first_stage_mount
+product                /product             erofs ro wait,slotselect,logical,first_stage_mount
+vendor                 /vendor              erofs ro wait,slotselect,logical,first_stage_mount
+vendor_dlkm            /vendor_dlkm         erofs ro wait,slotselect,logical,first_stage_mount
+system_dlkm            /system_dlkm         erofs ro wait,slotselect,logical,first_stage_mount
+odm                    /odm                 erofs ro wait,slotselect,logical,first_stage_mount
+mi_ext                 /mi_ext              erofs ro wait,slotselect,logical,first_stage_mount,nofail
+
+/dev/block/bootdevice/by-name/metadata  /metadata f2fs noatime,nosuid,nodev,discard wait,check,formattable,first_stage_mount
+/dev/block/bootdevice/by-name/userdata  /data f2fs noatime,nosuid,nodev,discard,reserve_root=32768,resgid=1065,fsync_mode=nobarrier,inlinecrypt latemount,wait,check,formattable,fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0,keydirectory=/metadata/vold/metadata_encryption,metadata_encryption=aes-256-xts:wrappedkey_v0,quota,reservedsize=128M,sysfs_path=/sys/devices/platform/soc/1d84000.ufshc,checkpoint=fs
+/dev/block/bootdevice/by-name/misc       /misc    emmc defaults defaults
+/dev/block/bootdevice/by-name/persist    /persist ext4 noatime,nosuid,nodev,barrier=1 wait
+
+/devices/platform/soc/a600000.ssusb/*.dwc3/xhci-hcd.*.auto* /usb_otg auto nosuid,nodev wait,voldmanaged=usbotg:auto

@@ -11,7 +11,7 @@
 ## 本地编译
 
 ```bash
-cd /root/twrp16
+cd ~/android/twrp
 source build/envsetup.sh
 lunch twrp_annibale-bp2a-eng
 m recoveryimage

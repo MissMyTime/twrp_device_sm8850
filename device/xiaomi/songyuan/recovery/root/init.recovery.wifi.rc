@@ -1,0 +1,5 @@
+# init.recovery.wifi.rc — intentionally empty for first bring-up
+# SPDX-License-Identifier: Apache-2.0
+
+# Wi-Fi is intentionally disabled in recovery first bring-up.
+# Enable only after display/touch/decryption/fastbootd are stable.

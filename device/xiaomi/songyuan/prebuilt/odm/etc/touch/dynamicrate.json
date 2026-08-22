@@ -1,0 +1,8 @@
+{
+     "DynamicRate":{
+          "version":"1.0",
+          "product":"songyuan",
+          "DEFAULT":true,
+          "APP":"com.dragon.read"
+     }
+}

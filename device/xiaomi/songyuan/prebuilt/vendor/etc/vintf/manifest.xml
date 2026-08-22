@@ -1,0 +1,9 @@
+<!--
+    Recovery device-manifest anchor for Redmi K100 Pro Max (songyuan).
+
+    Android libvintf requires a primary device manifest before it merges the
+    stock K100PM per-HAL fragments in /vendor/etc/vintf/manifest and
+    /odm/etc/vintf/manifest.  Keep this anchor intentionally empty so those
+    exact stock fragments remain the single source of HAL declarations.
+-->
+<manifest version="9.0" type="device" />

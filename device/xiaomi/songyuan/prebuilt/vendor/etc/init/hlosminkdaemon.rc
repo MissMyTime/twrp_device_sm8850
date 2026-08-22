@@ -1,0 +1,17 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# All Rights Reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+# Create the directories used by qwes
+on post-fs-data
+    mkdir /data/vendor/qwes 0755 system system
+
+service vendor.minkdaemon /vendor/bin/hlosminkdaemon
+    class early_hal
+    seclabel u:r:recovery:s0
+    user system
+    group system oem_2912 wakelock
+    capabilities WAKE_ALARM BLOCK_SUSPEND
+    socket ssgtzd stream 0660 system oem_2912
+    socket hlos_mink_opener stream 0660 system system
+    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib64/hw:/odm/lib64:/system/lib64:/sbin

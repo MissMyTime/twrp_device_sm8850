@@ -53,7 +53,7 @@
 ## 构建
 
 ```bash
-cd /root/twrp16
+cd ~/android/twrp
 source build/envsetup.sh
 lunch twrp_myron-myron-eng
 m recoveryimage
@@ -80,7 +80,7 @@ fastboot --slot=b flash recovery recovery.img
 fastboot reboot recovery
 ```
 
-当前槽位为 `b` 时，把 `--slot=b` 改为 `--slot=a`。本镜像为 ramdisk-only recovery，不支持 `fastboot boot recovery.img`。
+当前槽位为 `a` 时，把 `--slot=b` 改为 `--slot=a`。本镜像为 ramdisk-only recovery，不支持 `fastboot boot recovery.img`。
 
 ## 维护边界
 

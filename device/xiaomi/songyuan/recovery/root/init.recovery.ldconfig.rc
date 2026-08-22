@@ -1,0 +1,10 @@
+# init.recovery.ldconfig.rc — linker namespace setup for recovery
+# SPDX-License-Identifier: Apache-2.0
+
+on early-init
+    mkdir /linkerconfig 0755 root root
+    copy /system/etc/ld.config.txt /linkerconfig/ld.config.txt
+    chmod 0444 /linkerconfig/ld.config.txt
+
+on fs
+    export LD_CONFIG_FILE /system/etc/ld.config.txt

@@ -1,0 +1,26 @@
+# init.recovery.logd.rc — recovery logcat capture
+# SPDX-License-Identifier: Apache-2.0
+
+on init
+    mkdir /tmp 0777 root root
+    start logd
+
+service logd /system/bin/logd
+    class core
+    socket logdr seqpacket 0666 root root
+    socket logdw dgram+passcred 0222 root root
+    file /proc/kmsg r
+    file /dev/kmsg w
+    user root
+    group root
+    capabilities SYSLOG AUDIT_CONTROL SETGID SETUID
+    seclabel u:r:logd:s0
+
+service logcat_recovery /system/bin/logcat -b all -v threadtime -f /tmp/logcat.log
+    disabled
+    user root
+    group root system log
+    seclabel u:r:recovery:s0
+
+on property:logd.ready=true
+    start logcat_recovery

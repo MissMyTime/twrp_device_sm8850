@@ -1,0 +1,18 @@
+*.so -text
+*.ko -text
+*.bin -text
+*.img -text
+*.elf -text
+
+prebuilt/**/bin/** -text
+prebuilt/**/lib/** -text
+prebuilt/**/lib64/** -text
+prebuilt/**/firmware/** -text
+
+*.rc text eol=lf
+*.xml text eol=lf
+*.mk text eol=lf
+*.bp text eol=lf
+*.prop text eol=lf
+*.fstab text eol=lf
+*.ini text eol=lf

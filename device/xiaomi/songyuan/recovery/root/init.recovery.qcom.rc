@@ -1,0 +1,144 @@
+# Recovery init — Redmi K100 Pro Max / songyuan
+
+import /init.recovery.logd.rc
+import /init.recovery.ldconfig.rc
+import /init.recovery.usb.rc
+import /init.recovery.service.rc
+import /init.recovery.hlthchrg.rc
+import /init.recovery.wifi.rc
+
+on early-fs
+    write /proc/sys/walt/sched_lib_name "recovery,magiskboot,Updater,updater,update_engine_sideload"
+    write /proc/sys/walt/sched_lib_mask_force 255
+
+on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+    wait /dev/block/bootdevice
+    # songyuan's IPA/CNSS firmware is supplied by ueventd from the official
+    # /vendor/firmware_mnt/image directory. Without the sysfs fallback the
+    # peach_v2 driver loops on ipa_fws.mdt, times out MHI power-on and can
+    # eventually trigger a platform reboot.
+    write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
+    chmod 0660 /dev/qseecom
+    chown system drmrpc /dev/qseecom
+    chmod 0664 /dev/ion
+    chown system system /dev/ion
+    # Keep Persist mounted at the same path TWRP tracks, then expose the
+    # vendor bind required by the QTI/Thales security stack.
+    mkdir /persist 0775 shell system
+    mkdir /mnt/vendor 0775 shell system
+    mkdir /mnt/vendor/persist 0775 shell system
+    wait /dev/block/bootdevice/by-name/persist
+    mount ext4 /dev/block/bootdevice/by-name/persist /persist noatime nosuid nodev barrier=1
+    mount none /persist /mnt/vendor/persist bind
+    mkdir /vendor/firmware_mnt 0755 root root
+    mkdir /firmware 0755 root root
+    setprop vendor.gatekeeper.disable_spu true
+    setprop vendor.gatekeeper.is_security_level_spu 0
+    # qseecomd must see the UFS bootdevice link during its one-time RPMB
+    # initialization. KeyMint starts only after qseecomd has settled and uses
+    # the real Android 16 K100PM build properties baked into this recovery.
+    # No runtime property override is permitted.
+    start vendor.boot-qti
+    start vendor.qseecomd
+    wait_for_prop init.svc.vendor.qseecomd running
+    exec -- /system/bin/sleep 1
+    start vendor.keymint
+
+on boot
+    # Keep idle recovery thermals under control. TWRP switches this property to
+    # performance only around intensive operations.
+    setprop recovery.perf.mode 0
+
+    # USB ADB/configfs defaults are established during fs by init.rc and
+    # init.recovery.usb.rc. Reasserting ADB here races TWRP's userspace-fastboot
+    # startup and changes a working Fastbootd gadget back into recovery ADB.
+    start songyuan-usb-role-recover
+    chmod 0755 /sbin/iw
+    chmod 0755 /sbin/wifi-dhcp.sh
+    chmod 0755 /sbin/wifi-load-modules.sh
+    chmod 0755 /sbin/wpa_cli
+    chmod 0755 /sbin/wpa_supplicant
+
+on property:ro.boot.usbcontroller=*
+    setprop sys.usb.controller ${ro.boot.usbcontroller}
+
+on property:recovery.perf.mode=0
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy6/scaling_governor schedutil
+
+on property:recovery.perf.mode=1
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy6/scaling_governor performance
+
+on property:twrp.modules.loaded=true
+    setprop vendor.touch.recovery.firmware_ready 0
+    start songyuan-touch-fw-load
+    start songyuan-haptics-ready
+    chmod 0755 /sbin/iw
+    chmod 0755 /sbin/wifi-dhcp.sh
+    chmod 0755 /sbin/wifi-load-modules.sh
+    chmod 0755 /sbin/wpa_cli
+    chmod 0755 /sbin/wpa_supplicant
+    wait /sys/class/power_supply/battery
+    chown system drmrpc /dev/smcinvoke
+    chmod 0660 /dev/smcinvoke
+    # qsee_ipc_irq_spss is finalized by the recovery-seclabel security starter;
+    # init's vendor-domain path lookup is denied on the stock policy.
+    chmod 0444 /dev/dma_heap/qcom,qseecom
+    chmod 0444 /dev/dma_heap/qcom,qseecom-ta
+    chmod 0444 /dev/dma_heap/qcom,system
+    chmod 0444 /dev/dma_heap/system
+    setprop twrp.songyuan.modules_ready 1
+    start vendor.health-default
+
+on property:servicemanager.ready=true
+    setprop sys.boot_completed 1
+
+on property:sys.boot_completed=1
+    start songyuan-security-start
+
+on property:ro.twrp.fastbootd=1
+    stop songyuan-usb-role-recover
+    # TWRP has already selected Fastbootd when it publishes this property.
+    # Reassert the final gadget identity after stopping the recovery-only USB
+    # role monitor so no late boot action can leave the host seeing ADB/REC.
+    setprop sys.usb.config fastboot
+
+# Mount this device's active-slot modem firmware read-only, then start only the
+# stock K100PM STM/Thales eSE and Weaver chain. This is a boot-time initializer,
+# not a password-attempt hook.
+service songyuan-security-start /system/bin/songyuan-security-start.sh
+    disabled
+    oneshot
+    user root
+    group root shell system drmrpc nfc
+    seclabel u:r:recovery:s0
+
+# Load the official K100PM FT3685G firmware before the Xiaomi THP HAL starts.
+# This service owns the only cold-boot path that publishes firmware_ready=1.
+service songyuan-touch-fw-load /system/bin/songyuan-touch-fw-load.sh
+    disabled
+    oneshot
+    user root
+    group root system input
+    seclabel u:r:recovery:s0
+
+# Prepare the direct qcom-haptics fallback without injecting any synthetic
+# touch event or one-shot vibration.
+service songyuan-haptics-ready /system/bin/songyuan-haptics-ready.sh
+    disabled
+    oneshot
+    user root
+    group root system input
+    seclabel u:r:recovery:s0
+
+# Preserve USB host mode while OTG storage is connected and restore the prior
+# ADB/MTP composition after the controller returns to peripheral mode.
+service songyuan-usb-role-recover /system/bin/songyuan-usb-role-recover.sh
+    class main
+    disabled
+    user root
+    group root shell system usb
+    seclabel u:r:recovery:s0

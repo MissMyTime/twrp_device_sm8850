@@ -1,0 +1,258 @@
+{
+    "config_name":"gameturbo_config",
+    "version":"2026070300",
+    "product":"songyuan",
+
+    "SUPER CORE": {
+        "FIRSTFRAME_DURATION_ENABLE": true,
+        "SUPERTOUCH_ENABLE": false,
+        "PENDINGBUFFER_ENABLE": true,
+        "FIRSTFRAME_BOOST_ENABLE": true,
+        "DYNAMIC_DROPBUFFER_ENABLE": true,
+        "FIRSTFRAME_DURATION_LEVEL": 1,
+        "SUPERTOUCH_LEVEL": 2,
+        "PENDINGBUFFER_LEVEL": 3,
+        "FIRSTFRAME_BOOST_LEVEL": 2,
+        "DYNAMIC_DROPBUFFER_LEVEL": 3,
+        "SUPERTOUCH_ENABLE_APP": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm"
+        ],
+        "PENDINGBUFFER_ENABLE_APP": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm"
+        ]
+    },
+    "SUPER_CORE_BAR" : {    // 10001----[超核跟手]
+        "SHOW_ITEM": true,
+        "SWITCH_DEFAULT_STATUS": true,
+        "MULTI_SCALE_NUM": 3,
+        "GAME_DEFAULT_LEVEL": 2,
+        "GAME_FPS_LEVEL": 3,
+        "GAME_MOBA_LEVEL": 3,
+        "GAME_RHYTHM_LEVEL": 3,
+        "GAME_FPS_APP_LIST": [
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm",
+            "com.tencent.tmgp.codev",
+            "com.tencent.mf.uam",
+            "com.tencent.tmgp.cf",
+            "com.tencent.tmgp.cod",
+            "com.tencent.tmgp.gnyx"
+        ],
+        "GAME_MOBA_APP_LIST": [
+            "com.tencent.tmgp.sgame"            //MOBA目前只有王者荣耀默认最高档
+        ],
+        "GAME_RHYTHM_APP_LIST": [
+            "com.tencent.game.rhythmmaster",    //节奏大师
+            "com.hermes.mk.bilibili",           //初音未来
+            "com.hermes.mk",
+            "com.PigeonGames.Phigros",          //Phigros
+            "me.mugzone.emiria",                //Malody
+            "com.bilibili.bangdream.mi",        //梦想协奏曲BanG Dream
+            "com.bilibili.bangdream",
+            "com.superb.rhv",                   //Rhythm Heaven
+            "com.prpr.musedash.liteapks",       //Muse Dash
+            "com.prpr.musedash",
+            "moe.low.ard",                      //Arcade
+            "moe.low.arc.kbinstaller",
+            "com.xd.rotaeno.tapcn",             //旋转音律
+            "com.tunergames.paradigmchina"      //范式：起源
+        ],
+        "GAME_NORMALRATE_LEVEL": 1,
+        "GAME_NORMALRATE_APP_LIST": [
+            "com.miHoYo.Nap",
+            "com.miHoYo.Nap.bilibili",
+            "com.miHoYo.hkrpg",
+            "com.miHoYo.hkrpg.bilibili",
+            "com.kurogame.mingchao",
+            "com.kurogame.mingchao.bilibili",
+            "com.kurogame.mingchao.bytedance.gamecenter",
+            "com.kurogame.mingchao.beta",
+            "com.miHoYo.Yuanshen",
+            "com.miHoYo.ys.mi",
+            "com.miHoYo.ys.bilibili",
+            "com.miHoYo.GenshinImpact",
+            "com.hypergryph.endfield",
+            "com.hypergryph.arknights",
+            "com.hypergryph.arknights.bilibili"
+        ]
+    },
+    "SUPER_RESPONSE_BAR" : {    // 10002----[速芯感测]
+        "SHOW_ITEM": false,
+        "SWITCH_DEFAULT_STATUS": false,
+        "MULTI_SCALE_NUM": 3,
+        "GAME_DEFAULT_LEVEL": 2,
+        "GAME_FPS_LEVEL": 2,
+        "GAME_MOBA_LEVEL": 2,
+        "GAME_FPS_APP_LIST": [
+        ],
+        "GAME_MOBA_APP_LIST": [
+        ]
+    },
+    "SUPER_ALGO_BAR" : {    // 10003----[智算防抖]
+        "SHOW_ITEM": true,
+        "SWITCH_DEFAULT_STATUS": true,
+        "MULTI_SCALE_NUM": 3,
+        "GAME_DEFAULT_LEVEL": 2,
+        "GAME_FPS_LEVEL": 3,
+        "GAME_MOBA_LEVEL": 2,
+        "GAME_RHYTHM_LEVEL": 2,
+        "GAME_FPS_APP_LIST": [
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm",
+            "com.tencent.tmgp.codev",
+            "com.tencent.mf.uam",
+            "com.tencent.tmgp.cf",
+            "com.tencent.tmgp.cod",
+            "com.tencent.tmgp.gnyx"
+        ],
+        "GAME_MOBA_APP_LIST": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.lolm",
+            "com.miHoYo.GenshinImpact",
+            "com.miHoYo.bh3.mi"
+        ],
+        "GAME_RHYTHM_APP_LIST": [
+            "com.tencent.game.rhythmmaster",    //节奏大师
+            "com.hermes.mk.bilibili",           //初音未来
+            "com.hermes.mk",
+            "com.PigeonGames.Phigros",          //Phigros
+            "me.mugzone.emiria",                //Malody
+            "com.bilibili.bangdream.mi",        //梦想协奏曲BanG Dream
+            "com.bilibili.bangdream",
+            "com.superb.rhv",                   //Rhythm Heaven
+            "com.prpr.musedash.liteapks",       //Muse Dash
+            "com.prpr.musedash",
+            "moe.low.ard",                      //Arcade
+            "moe.low.arc.kbinstaller",
+            "com.xd.rotaeno.tapcn",             //旋转音律
+            "com.tunergames.paradigmchina"      //范式：起源
+        ]
+    },
+    "SUPER_MISTOUCH_BAR" : {    // 10004----[边缘防误触]
+        "SHOW_ITEM": true,
+        "SWITCH_DEFAULT_STATUS": true,
+        "MULTI_SCALE_NUM": 3,
+        "GAME_DEFAULT_LEVEL": 2,
+        "GAME_FPS_LEVEL": 1,
+        "GAME_MOBA_LEVEL": 1,
+        "GAME_RHYTHM_LEVEL": 1,
+        "GAME_FPS_APP_LIST": [
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm",
+            "com.tencent.tmgp.codev",
+            "com.tencent.mf.uam",
+            "com.tencent.tmgp.cf",
+            "com.tencent.tmgp.cod",
+            "com.tencent.tmgp.gnyx"
+        ],
+        "GAME_MOBA_APP_LIST": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.lolm",
+            "com.miHoYo.GenshinImpact",
+            "com.miHoYo.bh3.mi"
+        ],
+        "GAME_RHYTHM_APP_LIST": [
+            "com.tencent.game.rhythmmaster",    //节奏大师
+            "com.hermes.mk.bilibili",           //初音未来
+            "com.hermes.mk",
+            "com.PigeonGames.Phigros",          //Phigros
+            "me.mugzone.emiria",                //Malody
+            "com.bilibili.bangdream.mi",        //梦想协奏曲BanG Dream
+            "com.bilibili.bangdream",
+            "com.superb.rhv",                   //Rhythm Heaven
+            "com.prpr.musedash.liteapks",       //Muse Dash
+            "com.prpr.musedash",
+            "moe.low.ard",                      //Arcade
+            "moe.low.arc.kbinstaller",
+            "com.xd.rotaeno.tapcn",             //旋转音律
+            "com.tunergames.paradigmchina"      //范式：起源
+        ]
+    },
+    "HOT_AREA": {
+        "HOT_AREA_APP_SET_ENABLE": true,
+        "HOT_AREA_ADAPT_ENABLE": true,
+        "APP":[
+            {"com.tencent.tmgp.sgame":"APP_SET_SGAME"},
+            {"com.tencent.tmgp.sgamece":"APP_SET_SGAME"},
+            {"com.tencent.mf.uam":"APP_SET_SGAME"},
+            {"com.tencent.tmgp.pubgmhd":"APP_SET_SGAME"}
+        ],
+        "ADAPT":[
+            {"com.tencent.tmgp.dfm":"AREA_INFO_ADAPT"},
+            {"com.tencent.tmgp.cod":"AREA_INFO_ADAPT"},
+            {"com.tencent.tmgp.gnyx":"AREA_INFO_ADAPT"},
+            {"com.tencent.tmgp.cf":"AREA_INFO_ADAPT"}
+        ],
+        "com.tencent.tmgp.sgame":"/mnt/vendor/persist/touch/sgame.json",
+        "com.tencent.tmgp.sgamece":"/mnt/vendor/persist/touch/sgamece.json",
+        "com.tencent.mf.uam":"/mnt/vendor/persist/touch/mf_uam.json",
+        "com.tencent.tmgp.pubgmhd":"/mnt/vendor/persist/touch/pubgmhd.json"
+    },
+    "HOT_AREA_BAR" : {    // 10005----[智能热区]
+        "SHOW_ITEM": true,
+        "SWITCH_DEFAULT_STATUS": true,
+        "MULTI_SCALE_NUM": 3,
+        "GAME_DEFAULT_LEVEL": 2,
+        "GAME_FPS_LEVEL": 2,
+        "GAME_MOBA_LEVEL": 2,
+        "GAME_FPS_APP_LIST": [
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.tmgp.dfm",
+            "com.tencent.tmgp.codev",
+            "com.tencent.mf.uam",
+            "com.tencent.tmgp.cf",
+            "com.tencent.tmgp.cod",
+            "com.tencent.tmgp.gnyx"
+        ],
+        "GAME_MOBA_APP_LIST": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.lolm",
+            "com.miHoYo.GenshinImpact",
+            "com.miHoYo.bh3.mi"
+        ]
+    },
+    "SUPER_VIBRATOR": {
+        "VIBRATOR_ENABLE": false,
+        "APP":[
+            "com.tencent.tmgp.sgame",
+            "com.tencent.tmgp.sgamece"
+        ]
+    },
+    "SUPER_VIBRATOR_BAR": {    // 10006----[灵动震感]
+        "SHOW_ITEM": false,
+        "SWITCH_DEFAULT_STATUS": false,
+        "MULTI_SCALE_NUM": 1,
+        "GAME_DEFAULT_LEVEL": 0,
+        "GAME_FPS_LEVEL": 1,
+        "GAME_MOBA_LEVEL": 1,
+        "GAME_FPS_APP_LIST": [
+        ],
+        "GAME_MOBA_APP_LIST": [
+            "com.tencent.tmgp.sgame"
+        ]
+    },
+    "NORMAL_REPORT_RATE": {
+        "NORMAL_REPORT_RATE_ENABLE": true,
+        "APP":[
+            "com.miHoYo.Nap",
+            "com.miHoYo.Nap.bilibili",
+            "com.miHoYo.hkrpg",
+            "com.miHoYo.hkrpg.bilibili",
+            "com.kurogame.mingchao",
+            "com.kurogame.mingchao.bilibili",
+            "com.kurogame.mingchao.bytedance.gamecenter",
+            "com.kurogame.mingchao.beta",
+            "com.miHoYo.Yuanshen",
+            "com.miHoYo.ys.mi",
+            "com.miHoYo.ys.bilibili",
+            "com.miHoYo.GenshinImpact",
+            "com.hypergryph.endfield",
+            "com.hypergryph.arknights",
+            "com.hypergryph.arknights.bilibili"
+        ]
+    }
+}

@@ -1,0 +1,26 @@
+# Recovery properties — Redmi K100 Pro Max / songyuan
+ro.product.device=songyuan
+ro.product.name=songyuan
+ro.product.board=canoe
+ro.product.brand=Redmi
+ro.product.model=Redmi K100 Pro Max
+ro.product.manufacturer=Xiaomi
+ro.board.platform=canoe
+ro.hardware=qcom
+ro.product.cpu.abilist=arm64-v8a
+ro.product.cpu.abi=arm64-v8a
+ro.build.fingerprint=Redmi/songyuan/songyuan:16/BP2A.250605.031.A3/OS3.0.306.0.WGNCNXM:user/release-keys
+ro.sf.lcd_density=480
+ro.minui.pixel_format=RGBX_8888
+ro.minui.overscan_percent=0
+ro.recovery.usb.vid=18D1
+ro.recovery.usb.adb.pid=D001
+ro.twrp.boot=1
+
+# Prepare metadata-encrypted Data before choosing the first credential page.
+# Keep the active vendor/ODM mounts available for the K100PM security HALs and
+# use the bounded post-decrypt media bind path.
+twrp.recovery.prepare_fbe=1
+twrp.recovery.keep_runtime_partitions=1
+twrp.recovery.post_decrypt_media_bind=1
+twrp.recovery.skip_default_fbe_password=1

@@ -1,0 +1,18 @@
+service vendor.keymint-strongbox /odm/bin/hw/android.hardware.security.keymint-service.strongbox-thales
+    class early_hal
+    disabled
+    seclabel u:r:recovery:s0
+    user vendor_thales_strongbox
+    group vendor_thales_strongbox
+
+on init && property:ro.boot.hwc=JP
+    setprop ro.strongbox.manufacturer "Thales"
+    setprop ro.strongbox.model "ST54L-CeSE-1.1"
+
+on init && property:ro.boot.hwc=CN
+    setprop ro.strongbox.manufacturer "Thales"
+    setprop ro.strongbox.model "ST54L-CeSE-1.1"
+
+on init && property:ro.boot.hwc=GL
+    setprop ro.strongbox.manufacturer "Thales"
+    setprop ro.strongbox.model "ST54L-CeSE-1.1"

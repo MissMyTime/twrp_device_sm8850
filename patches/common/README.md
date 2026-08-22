@@ -10,6 +10,7 @@
 - Data、Metadata 的 F2FS 检查、修复与格式化支持。
 - Internal Storage、Dalvik/ART Cache 等虚拟清除项目的文件系统操作保护。
 - 传统安装器的 `/sbin/sh`、`bash`、`bas`、`getprop` 兼容路径。
+- AnyKernel3 当前槽位、音量键选择与传统 `bootctl` 调用兼容；只有安装成功后才应用请求的槽位。
 - 官方 A/B 安装成功状态处理、LP/Super 容量检查与安全修复。
 - 刷写 Super 镜像前解除动态分区映射。
 - 安装阶段性能策略切换及结束后恢复。
@@ -30,4 +31,4 @@
 - `/system/bin/twrp-decrypt-retry.sh`
 - `/system/bin/twrp-reboot-cleanup.sh`
 
-公共目录不得包含具体机型、厂商安全服务或专属分区规则。Myron 的 `twrp_mtp_adb`、Format Data 页面和双鱼开屏均位于 `patches/myron/`，不会影响其他设备。
+公共目录不得包含具体机型、厂商安全服务或专属分区规则。Myron 的 `twrp_mtp_adb`、Format Data 页面和双鱼开屏位于 `patches/myron/`；Songyuan 的安全链、MTP、触摸、振动和界面源码位于 `patches/songyuan/`，不会影响其他设备。

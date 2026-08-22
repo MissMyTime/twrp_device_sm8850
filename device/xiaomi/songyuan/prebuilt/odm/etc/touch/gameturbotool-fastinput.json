@@ -1,0 +1,41 @@
+{
+    "config_name":"super_core_config",
+    "version":"2024053100",
+    "product":"songyuan",
+
+    "SUPER CORE": {
+        "APP": [
+            "com.tencent.tmgp.sgame",
+            "com.tencent.tmgp.pubgmhd",
+            "com.tencent.lolm",
+            "com.tencent.tmgp.cf",
+            "com.tencent.tmgp.cod",
+            "com.tencent.tmgp.speedmobile",
+            "com.tencent.tmgp.supercell.brawlstars",
+            "com.tencent.tmgp.WePop",
+            "com.netease.mc.mi",
+            "com.miHoYo.ys.mi",
+            "com.miHoYo.GenshinImpact",
+            "com.miHoYo.Yuanshen",
+            "com.miHoYo.hkrpg",
+            "com.mengguitg.mi",
+            "com.fy.fcds.mi",
+            "com.pokemon.awakening.mi",
+            "com.carrot.carrotfantasy",
+            "com.qiqi.game.dmmtwo.mi",
+            "xtdyd.adh.mi",
+            "com.hshuochairenwangzhe.mi",
+            "com.zouchumigong02.mi",
+            "com.qidian.dldl.mi",
+            "com.fy.jldzz.mi",
+            "com.outfit7.mytalkingtomfriends.mi",
+            "com.je.skgame",
+            "tldhz.adh.mi",
+            "com.carrot.carrotfantasy",
+            "com.wonder.hxhcr.mi",
+            "com.imangi.templerun2",
+            "com.outfit7.herodash.mi",
+            "com.kiloo.subwaysurf"
+        ]
+    }
+}

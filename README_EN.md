@@ -14,6 +14,7 @@ This repository provides complete device trees, shared source changes and isolat
 | --- | --- | --- |
 | Redmi K90 | `annibale` | [View](docs/xiaomi-annibale.md) |
 | Redmi K90 Pro Max / POCO F8 Ultra | `myron` | [View](docs/xiaomi-myron.md) |
+| Redmi K100 Pro Max | `songyuan` | [View](docs/xiaomi-songyuan.md) |
 | Xiaomi 17 Ultra | `nezha` | [View](docs/xiaomi-nezha.md) |
 | realme Neo8 | `RE6402L1` / `neo8` | [View](docs/realme-neo8.md) |
 
@@ -64,6 +65,7 @@ Implementation details, supported scope and device differences are documented in
 - [Patch documentation](docs/PATCHES.md)
 - [Redmi K90 / annibale](docs/xiaomi-annibale.md)
 - [Redmi K90 Pro Max / myron](docs/xiaomi-myron.md)
+- [Redmi K100 Pro Max / songyuan](docs/xiaomi-songyuan.md)
 - [Xiaomi 17 Ultra / nezha](docs/xiaomi-nezha.md)
 - [realme Neo8 / RE6402L1](docs/realme-neo8.md)
 

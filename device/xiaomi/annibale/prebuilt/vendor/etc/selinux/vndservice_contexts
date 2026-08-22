@@ -8,10 +8,9 @@
 # is_flag_disabled(flag, rules)
 # SELinux rules which apply only if given feature is turned off
 
-#line 1 "/home/byben/fox_14.1/out/soong/.intermediates/system/sepolicy/contexts/vndservice_contexts/android_common/annibale/newline"
+#line 1 "out/soong/.intermediates/system/sepolicy/contexts/vndservice_contexts/android_common/annibale/newline"
 
 #line 1 "system/sepolicy/vendor/vndservice_contexts"
 manager                 u:object_r:service_manager_vndservice:s0
 *                       u:object_r:default_android_vndservice:s0
-#line 1 "/home/byben/fox_14.1/out/soong/.intermediates/system/sepolicy/contexts/vndservice_contexts/android_common/annibale/newline"
-
+#line 1 "out/soong/.intermediates/system/sepolicy/contexts/vndservice_contexts/android_common/annibale/newline"

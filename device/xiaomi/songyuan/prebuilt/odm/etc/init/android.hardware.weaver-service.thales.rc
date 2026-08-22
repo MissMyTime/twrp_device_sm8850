@@ -1,0 +1,7 @@
+service weaver_hal_service /system/bin/songyuan-weaver-wrapper.sh
+    class hal
+    seclabel u:r:recovery:s0
+    user  vendor_thales_weaver
+    group vendor_thales_weaver system drmrpc
+    disabled
+    interface aidl android.hardware.weaver.IWeaver/default

@@ -30,8 +30,12 @@ assert_no_match_outside_stock_matrix() {
 }
 
 assert_no_match \
-    'neo8|nezha|RE6402L1|RMX8899|Goodix|OPlus|realme|ColorOS|ST54|SELog|Thales|vendor\.weaver_tms' \
+    'songyuan|K100PM|neo8|nezha|RE6402L1|RMX8899|Goodix|OPlus|realme|ColorOS|ST54|SELog|Thales|vendor\.weaver_tms' \
     "$REPO_ROOT/patches/common/files" "$REPO_ROOT/patches/common/patches"
+
+assert_no_match \
+    'neo8|nezha|RE6402L1|RMX8899|Goodix|OPlus|realme|ColorOS|vendor\.weaver_tms|twrp\.keymint\.' \
+    "$REPO_ROOT/patches/songyuan/files"
 
 assert_no_match \
     'neo8|RE6402L1|RMX8899|OPlus|realme|ColorOS|vendor\.weaver_tms' \
@@ -48,6 +52,10 @@ assert_no_match_outside_stock_matrix \
 assert_no_match_outside_stock_matrix \
     'myron|neo8|nezha|RE6402L1|RMX8899|nezha-goodix|secure_element-service-goodix|weaver-service-goodix|libese_weaver_goodix|vendor\.goodix\.hardware\.secure_element|OPlus|realme|ColorOS|vendor\.weaver_tms' \
     "$REPO_ROOT/device/xiaomi/annibale"
+
+assert_no_match_outside_stock_matrix \
+    'annibale|myron|neo8|nezha|RE6402L1|RMX8899|nezha-goodix|secure_element-service-goodix|weaver-service-goodix|libese_weaver_goodix|vendor\.goodix\.hardware\.secure_element|OPlus|realme|ColorOS|vendor\.weaver_tms|twrp\.keymint\.' \
+    "$REPO_ROOT/device/xiaomi/songyuan"
 
 for file in \
     etc/init.rc \
@@ -75,6 +83,30 @@ for set_name in neo8 nezha; do
     grep -q 'bool setRecoveryKeyMintEnvironment(bool stock_environment)' \
         "$REPO_ROOT/patches/$set_name/files/system/vold/Decrypt.cpp" || \
         fail "$set_name KeyMint implementation is missing"
+done
+
+for source_file in Decrypt.cpp KeyStorage.cpp Weaver1.cpp; do
+    [ -s "$REPO_ROOT/patches/songyuan/files/system/vold/$source_file" ] || \
+        fail "Songyuan security source is missing: $source_file"
+done
+grep -q 'Refusing KeyMint-upgraded blob' \
+    "$REPO_ROOT/patches/songyuan/files/system/vold/KeyStorage.cpp" || \
+    fail "Songyuan KeyMint upgrade-write protection is missing"
+grep -q 'songyuan_mtp_adb' \
+    "$REPO_ROOT/patches/songyuan/files/bootable/recovery/partitionmanager.cpp" || \
+    fail "Songyuan MTP/ADB composite mode is missing"
+grep -q 'MTP background worker: starting after the current action completed' \
+    "$REPO_ROOT/patches/songyuan/files/bootable/recovery/gui/action.cpp" || \
+    fail "Songyuan post-decrypt MTP race fix is missing"
+
+for other_set in neo8 nezha; do
+    for source_file in Decrypt.cpp KeyStorage.cpp; do
+        if cmp -s \
+                "$REPO_ROOT/patches/songyuan/files/system/vold/$source_file" \
+                "$REPO_ROOT/patches/$other_set/files/system/vold/$source_file"; then
+            fail "Songyuan must not reuse $other_set $source_file"
+        fi
+    done
 done
 
 # The KeyMint override channel must use the shared twrp.keymint.* namespace
@@ -281,6 +313,45 @@ if grep -qE '^BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS \+= --rollback_index' \
 fi
 [ ! -d "$REPO_ROOT/device/xiaomi/myron/release" ] || \
     fail "Myron must not carry release flag overrides"
+
+songyuan_board="$REPO_ROOT/device/xiaomi/songyuan/BoardConfig.mk"
+grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 16\.0\.0$' \
+    "$songyuan_board" || fail "Songyuan recovery header must use Android 16.0.0"
+grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-07-01$' \
+    "$songyuan_board" || fail "Songyuan recovery header security patch is incorrect"
+grep -q '^BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 16$' \
+    "$songyuan_board" || fail "Songyuan recovery release property is incorrect"
+grep -q '^BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-07-01$' \
+    "$songyuan_board" || fail "Songyuan recovery security patch is incorrect"
+grep -q '^VENDOR_SECURITY_PATCH := 2026-08-01$' \
+    "$songyuan_board" || fail "Songyuan vendor security patch is incorrect"
+assert_no_match \
+    '99\.87\.36|2099-12-31|twrp\.keymint\.|neo8|nezha|RE6402L1' \
+    "$songyuan_board" \
+    "$REPO_ROOT/device/xiaomi/songyuan/system.prop" \
+    "$REPO_ROOT/patches/songyuan/files"
+
+songyuan_ota_count=$(awk '
+    /^AB_OTA_PARTITIONS \+=/ { in_list = 1; next }
+    in_list && /^BOARD_RECOVERY_NEEDS_BOOTLOADER_CONTROL/ { exit }
+    in_list && /^[[:space:]]+[a-z0-9_-]+([[:space:]]*\\)?$/ { count++ }
+    END { print count + 0 }
+' "$songyuan_board")
+[ "$songyuan_ota_count" -eq 58 ] || \
+    fail "Songyuan OTA partition list must contain exactly 58 entries"
+diff -u "$REPO_ROOT/patches/songyuan/ota-partitions.txt" <(awk '
+    /^AB_OTA_PARTITIONS \+=/ { in_list = 1; next }
+    in_list && /^BOARD_RECOVERY_NEEDS_BOOTLOADER_CONTROL/ { exit }
+    in_list && /^[[:space:]]+[a-z0-9_-]+([[:space:]]*\\)?$/ {
+        gsub(/[[:space:]\\]/, "")
+        print
+    }
+' "$songyuan_board") >/dev/null || \
+    fail "Songyuan OTA partition list does not match the verified payload manifest"
+[ "$(stat -c '%s' "$REPO_ROOT/device/xiaomi/songyuan/prebuilt/odm/firmware/focaltech_ts_fw_songyuan.bin")" -eq 148712 ] || \
+    fail "Songyuan touch firmware size is not the verified 148712 bytes"
+[ ! -d "$REPO_ROOT/device/xiaomi/songyuan/.github" ] || \
+    fail "Songyuan device tree must not carry a private release workflow"
 
 grep -q 'name: "init_recovery.rc"' \
     "$REPO_ROOT/patches/common/files/bootable/recovery/etc/Android.bp" || \

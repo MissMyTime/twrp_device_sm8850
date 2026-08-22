@@ -23,22 +23,11 @@ sudo apt install -y git-core gnupg flex bison build-essential zip curl \
 ```bash
 mkdir -p ~/android/twrp
 cd ~/android/twrp
-repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-16
+repo init -u https://github.com/TWRP-Test/platform_manifest_twrp_aosp.git -b twrp-16.0
 repo sync -c --no-tags --no-clone-bundle -j$(nproc)
 ```
 
-## Fetch additional recovery tools
-
-The Myron recovery image includes the same nano, ncurses, logical-partition and OMAPI components as the verified image. If they are not present in the manifest checkout, clone them before applying this repository's source patches:
-
-```bash
-cd ~/android/twrp
-git clone -b lineage-22.2 https://github.com/LineageOS/android_external_nano.git external/nano
-git clone -b lineage-22.2 https://github.com/LineageOS/android_external_libncurses.git external/libncurses
-git clone -b master https://github.com/phhusson/vendor_lptools.git external/lptools
-git clone -b twrp-16.0 https://github.com/Just-TWRP/android_se_omapi.git external/se_omapi
-git clone -b twrp-16.0 https://github.com/adontoo/android_external_libmicrohttpd.git external/libmicrohttpd
-```
+The public `twrp-16.0` manifest already declares nano, ncurses, logical-partition tools, OMAPI and libmicrohttpd. Do not add a second private manifest or duplicate project checkout on top of it.
 
 ## Clone this repository
 
@@ -55,6 +44,7 @@ git clone https://github.com/MissMyTime/twrp_device_sm8850.git
 |---|---|---|
 | Redmi K90 | `annibale` | `twrp_annibale-bp2a-eng` |
 | Redmi K90 Pro Max | `myron` | `twrp_myron-myron-eng` |
+| Redmi K100 Pro Max | `songyuan` | `twrp_songyuan-bp2a-eng` |
 | Xiaomi 17 Ultra | `nezha` | `twrp_nezha-bp2a-eng` |
 | realme Neo8 | `RE6402L1` | `twrp_RE6402L1-bp2a-eng` |
 
@@ -75,12 +65,12 @@ cd ~/android/twrp
 twrp_device_sm8850/scripts/apply-patches.sh . <codename>
 ```
 
-The codename may be `myron`, `annibale`, `nezha`, `RE6402L1` or `neo8`. The script applies the common set first, then only the selected device set:
+The codename may be `myron`, `annibale`, `songyuan`, `nezha`, `RE6402L1` or `neo8`. The script applies the common set first, then only the selected device set:
 
 1. Copy the maintained full source files to establish the exact expected tree.
 2. Apply Git-format incremental patches when the target source repository matches.
 
-Myron keeps the verified TWRP vold baseline. Its small KeyStorage patch rejects a decryption attempt if KeyMint requests an OS-version key upgrade and never writes the returned blob. Annibale keeps stock vold. Nezha and Neo8 each carry a separate device-specific vold implementation.
+Myron keeps its verified TWRP vold baseline and rejects unapproved KeyMint environment overrides at build time. Annibale keeps stock vold. Songyuan, Nezha and Neo8 each carry a separate device-specific vold implementation; these files are never shared between device sets.
 
 ## Build manually
 
@@ -127,7 +117,7 @@ fastboot --slot=b flash recovery recovery.img
 fastboot reboot recovery
 ```
 
-The example assumes slot `b`; use `--slot=a` when `current-slot` reports `a`. All four device trees use A/B recovery partitions. They also set `BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true`, so the generated image is ramdisk-only and the kernel remains in `vendor_boot`. Most affected bootloaders cannot temporarily boot this image with `fastboot boot recovery.img`.
+The example assumes slot `b`; use `--slot=a` when `current-slot` reports `a`. All five device trees use A/B recovery partitions. They also set `BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true`, so the generated image is ramdisk-only and the kernel remains in `vendor_boot`. Most affected bootloaders cannot temporarily boot this image with `fastboot boot recovery.img`.
 
 ## Troubleshooting
 

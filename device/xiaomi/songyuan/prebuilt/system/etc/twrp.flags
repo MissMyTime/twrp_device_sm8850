@@ -1,0 +1,47 @@
+# recovery flags — Redmi K100 Pro Max / songyuan
+# Source: official songyuan fstab.qcom and by-name layout
+# Android 16 / SM8850 / Virtual A/B / dynamic partitions / FBE v2
+
+# Dynamic partitions
+# TWRP creates one full-super backup/restore entry automatically from these
+# logical partitions. Do not add a separate raw /super backup entry below,
+# otherwise the backup page shows two Super items.
+/system          erofs    system          flags=display="System";logical;slotselect
+/system_ext      erofs    system_ext      flags=display="System_Ext";logical;slotselect
+/system_dlkm     erofs    system_dlkm     flags=display="System_Dlkm";logical;slotselect
+/product         erofs    product         flags=display="Product";logical;slotselect
+/vendor          erofs    vendor          flags=display="Vendor";logical;slotselect
+/vendor_dlkm     erofs    vendor_dlkm     flags=display="Vendor_Dlkm";logical;slotselect
+/odm             erofs    odm             flags=display="Odm";logical;slotselect
+
+# Userdata / metadata encryption
+/data            f2fs     /dev/block/bootdevice/by-name/userdata     flags=display="Data";backup=1;wipeingui;formattable;storage;quota;fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0;keydirectory=/metadata/vold/metadata_encryption;metadata_encryption=aes-256-xts:wrappedkey_v0
+/metadata        f2fs     /dev/block/bootdevice/by-name/metadata     flags=display="Metadata"
+
+# Boot / recovery images
+/boot            emmc     /dev/block/bootdevice/by-name/boot          flags=display="Boot";backup=1;flashimg=1;slotselect
+/init_boot       emmc     /dev/block/bootdevice/by-name/init_boot     flags=display="Init_Boot";backup=1;flashimg=1;slotselect
+/vendor_boot     emmc     /dev/block/bootdevice/by-name/vendor_boot   flags=display="Vendor_Boot";backup=1;flashimg=1;slotselect
+/dtbo            emmc     /dev/block/bootdevice/by-name/dtbo          flags=display="Dtbo";backup=1;flashimg=1;slotselect
+/recovery        emmc     /dev/block/bootdevice/by-name/recovery      flags=display="Recovery";backup=1;flashimg=1;slotselect
+/vbmeta          emmc     /dev/block/bootdevice/by-name/vbmeta        flags=display="Vbmeta";backup=1;flashimg=1;slotselect
+/vbmeta_system   emmc     /dev/block/bootdevice/by-name/vbmeta_system flags=display="Vbmeta_System";backup=1;flashimg=1;slotselect
+/misc            emmc     /dev/block/bootdevice/by-name/misc          flags=display="Misc";backup=1;flashimg=1
+
+# Critical firmware / calibration partitions
+# Backup allowed where useful; no wipe flags.
+/persist         ext4     /dev/block/bootdevice/by-name/persist       flags=display="Persist";backup=1
+/modem           emmc     /dev/block/bootdevice/by-name/modem         flags=display="Modem";backup=1;flashimg=1;slotselect
+/modemfirmware   emmc     /dev/block/bootdevice/by-name/modemfirmware flags=display="Modem_Firmware";backup=1;flashimg=1;slotselect
+/dsp             emmc     /dev/block/bootdevice/by-name/dsp           flags=display="DSP";backup=1;flashimg=1;slotselect
+/bluetooth       emmc     /dev/block/bootdevice/by-name/bluetooth     flags=display="Bluetooth";backup=1;flashimg=1;slotselect
+/vm-bootsys      emmc     /dev/block/bootdevice/by-name/vm-bootsys    flags=display="VM_Bootsys";backup=1;flashimg=1;slotselect
+/vm-persist      emmc     /dev/block/bootdevice/by-name/vm-persist    flags=display="VM_Persist";backup=1;flashimg=1
+/qmcs            emmc     /dev/block/bootdevice/by-name/qmcs          flags=display="QMCS";backup=1;flashimg=1
+/spunvm          emmc     /dev/block/bootdevice/by-name/spunvm        flags=display="SPUNVM";backup=1;flashimg=1
+/soccp           emmc     /dev/block/bootdevice/by-name/soccp         flags=display="SOCCP";backup=1;flashimg=1;slotselect
+/logfs           emmc     /dev/block/bootdevice/by-name/logfs         flags=display="Logfs";backup=1;flashimg=1
+
+# Removable storage. Keep the wildcard parent out of the picker; real child
+# partitions discovered below it remain selectable.
+/usb_otg         auto     /devices/platform/soc/a600000.ssusb/*.dwc3/xhci-hcd.*.auto* flags=display="USB-OTG";wipeingui;removable;voldmanaged=usbotg:auto;storage=0

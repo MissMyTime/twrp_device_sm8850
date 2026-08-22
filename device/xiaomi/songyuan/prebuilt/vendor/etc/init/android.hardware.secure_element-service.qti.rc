@@ -1,0 +1,6 @@
+service vendor.secure_element /system/bin/songyuan-secure-element-wrapper.sh
+    seclabel u:r:recovery:s0
+    class early_hal
+    disabled
+    user system
+    group nfc system

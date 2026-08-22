@@ -1,0 +1,10 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# All rights reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+service vendor.gatekeeper_default /system/bin/songyuan-gatekeeper-wrapper.sh
+    class early_hal
+    seclabel u:r:recovery:s0
+    disabled
+    user system
+    group system

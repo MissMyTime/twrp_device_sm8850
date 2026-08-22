@@ -13,6 +13,7 @@
 | --- | --- | --- |
 | Redmi K90 | `annibale` | [查看](docs/xiaomi-annibale.md) |
 | Redmi K90 Pro Max / POCO F8 Ultra | `myron` | [查看](docs/xiaomi-myron.md) |
+| Redmi K100 Pro Max | `songyuan` | [查看](docs/xiaomi-songyuan.md) |
 | Xiaomi 17 Ultra | `nezha` | [查看](docs/xiaomi-nezha.md) |
 | realme Neo8 | `RE6402L1` / `neo8` | [查看](docs/realme-neo8.md) |
 
@@ -63,6 +64,7 @@ fastboot reboot recovery
 - [补丁说明](docs/PATCHES.md)
 - [Redmi K90 / annibale](docs/xiaomi-annibale.md)
 - [Redmi K90 Pro Max / myron](docs/xiaomi-myron.md)
+- [Redmi K100 Pro Max / songyuan](docs/xiaomi-songyuan.md)
 - [Xiaomi 17 Ultra / nezha](docs/xiaomi-nezha.md)
 - [realme Neo8 / RE6402L1](docs/realme-neo8.md)
 

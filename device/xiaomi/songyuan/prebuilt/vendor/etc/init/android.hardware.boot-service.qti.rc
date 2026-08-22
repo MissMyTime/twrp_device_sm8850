@@ -1,0 +1,9 @@
+# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+service vendor.boot-qti /vendor/bin/hw/android.hardware.boot-service.qti
+    class early_hal
+    disabled
+    seclabel u:r:recovery:s0
+    user root
+    group root

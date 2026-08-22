@@ -1,0 +1,167 @@
+# Copyright (c) 2023 Xiaomi, Inc.
+# All Rights Reserved.
+# Confidential and Proprietary - Xiaomi, Inc.
+#
+on post-fs-data
+    mkdir /data/vendor/mqsas_common 0771 system system
+    mkdir /data/vendor/touch 0771 system system
+    mkdir /data/vendor/touch_state 0771 system system
+    mkdir /mnt/vendor/persist/touch 0775 system system
+
+on property:vendor.touch.recovery.modules_loaded=1
+    chown system system /dev/xiaomi-touch
+    chmod 0666 /dev/xiaomi-touch
+    chown system system /dev/xiaomi-touch-knock
+    chmod 0664 /dev/xiaomi-touch-knock
+    chown system system /dev/xiaomi-thp
+    chmod 0664 /dev/xiaomi-thp
+    chown system system /sys/class/touch/tp_dev/fod_status
+    chmod 0664 /sys/class/touch/tp_dev/fod_status
+    chown system system /sys/class/touch/touch_dev/gesture_single_tap_state
+    chmod 0664 /sys/class/touch/touch_dev/gesture_single_tap_state
+    chown system system /sys/class/touch/touch_dev/fod_press_status
+    chmod 0664 /sys/class/touch/touch_dev/fod_press_status
+    chown system system /proc/tp_selftest
+    chmod 0664 /proc/tp_selftest
+    chown system system /proc/tp_selftest_1
+    chmod 0664 /proc/tp_selftest_1
+    chown system system /sys/class/touch/touch_dev/clicktouch_raw
+    chmod 0664 /sys/class/touch/touch_dev/clicktouch_raw
+    chown system system /sys/class/touch/touch_dev/update_rawdata
+    chmod 0664 /sys/class/touch/touch_dev/update_rawdata
+    chown system system /sys/class/touch/touch_dev/enable_touch_raw
+    chmod 0664 /sys/class/touch/touch_dev/enable_touch_raw
+    chown system system /sys/class/touch/touch_dev/resolution_factor
+    chmod 0664 /sys/class/touch/touch_dev/resolution_factor
+    chown system system /sys/class/touch/touch_dev/enable_touch_delta
+    chmod 0664 /sys/class/touch/touch_dev/enable_touch_delta
+    chown system system /sys/class/touch/touch_dev/touch_thp_dump
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_dump
+    chown system system /sys/class/touch/touch_dev/touch_thp_cmd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_cmd
+    chown system system /sys/class/touch/touch_dev/suspend_state
+    chmod 0664 /sys/class/touch/touch_dev/suspend_state
+    chown system system /sys/class/touch/touch_dev/prox_sensor_data
+    chmod 0664 /sys/class/touch/touch_dev/prox_sensor_data
+    chown system system /sys/class/touch/touch_dev/prox_sensor
+    chmod 0664 /sys/class/touch/touch_dev/prox_sensor
+    chown system system /sys/class/touch/touch_dev/touch_thp_rx_num
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_rx_num
+    chown system system /sys/class/touch/touch_dev/touch_thp_tx_num
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_tx_num
+    chown system system /sys/class/touch/touch_dev/touch_thp_x_resolution
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_x_resolution
+    chown system system /sys/class/touch/touch_dev/touch_thp_y_resolution
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_y_resolution
+    chown system system /sys/class/touch/touch_dev/touch_thp_smooth
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_smooth
+    chown system system /sys/class/touch/touch_dev/touch_thp_noisefilter
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_noisefilter
+    chown system system /sys/class/touch/touch_dev/touch_thp_downthd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_downthd
+    chown system system /sys/class/touch/touch_dev/touch_thp_upthd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_upthd
+    chown system system /sys/class/touch/touch_dev/touch_thp_movethd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_movethd
+    chown system system /sys/class/touch/touch_dev/touch_thp_islandthd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_islandthd
+    chown system system /sys/class/touch/touch_dev/touch_thp_cmd_data
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_cmd_data
+    chown system system /sys/class/touch/touch_dev/palm_sensor_data
+    chmod 0664 /sys/class/touch/touch_dev/palm_sensor_data
+    chown system system /sys/class/touch/touch_dev/palm_sensor
+    chmod 0664 /sys/class/touch/touch_dev/palm_sensor
+    chown system system /sys/class/touch/touch_dev/palm_sensor_1
+    chmod 0664 /sys/class/touch/touch_dev/palm_sensor_1
+    chown system system /sys/class/touch/touch_dev/weak_doubletap_sensor
+    chmod 0664 /sys/class/touch/touch_dev/weak_doubletap_sensor
+    chown system system /sys/class/touch/touch_dev/hold_sensor
+    chmod 0664 /sys/class/touch/touch_dev/hold_sensor
+    chown system system /proc/tp_fw_version
+    chmod 0664 /proc/tp_fw_version
+    chown system system /proc/tp_lockdown_info
+    chmod 0664 /proc/tp_lockdown_info
+    chmod 0664 /sys/class/touch/touch_dev/touch_active_status
+    chown system system /sys/class/touch/touch_dev/touch_active_status
+    chmod 0664 /sys/class/touch/touch_dev/touch_finger_status
+    chown system system /sys/class/touch/touch_dev/touch_finger_status
+    chmod 0664 /sys/class/touch/touch_dev/touch_irq_no
+    chown system system /sys/class/touch/touch_dev/touch_irq_no
+    chmod 0664 /sys/class/touch/touch_dev/touch_sensor
+    chown system system /sys/class/touch/touch_dev/touch_sensor
+    chmod 0664 /sys/class/touch/touch_dev/touch_sensor_ctrl
+    chown system system /sys/class/touch/touch_dev/touch_sensor_ctrl
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_mem_notify
+    chown system system /sys/class/touch/touch_dev/touch_thp_mem_notify
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_testmode
+    chown system system /sys/class/touch/touch_dev/touch_thp_testmode
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_testresult
+    chown system system /sys/class/touch/touch_dev/touch_thp_testresult
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_preset_point
+    chown system system /sys/class/touch/touch_dev/touch_thp_preset_point
+    chmod 0664 /sys/class/touch/touch_dev/touch_doze_analysis
+    chown system system /sys/class/touch/touch_dev/touch_doze_analysis
+    chown system system /sys/class/touch/touch_dev/touch_thp_cmd_ready
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_cmd_ready
+    chmod 0664 /sys/class/touch/touch_dev/touch_ic_buffer
+    chown system system /sys/class/touch/touch_dev/touch_ic_buffer
+    chmod 0664 /sys/class/touch/touch_dev/abnormal_event
+    chown system system /sys/class/touch/touch_dev/abnormal_event
+    chmod 0664 /sys/devices/virtual/keyboard/keypad/keyboard_status_param
+    chown system system /sys/devices/virtual/keyboard/keypad/keyboard_status_param
+    chown system system /sys/class/touch/touch_dev/touch_thp_ic_cmd
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_ic_cmd
+    chown system system /sys/class/touch/touch_dev/touch_thp_ic_cmd_data
+    chmod 0664 /sys/class/touch/touch_dev/touch_thp_ic_cmd_data
+    chown system system /sys/class/touch/touch_dev/touch_dfs_test
+    chmod 0664 /sys/class/touch/touch_dev/touch_dfs_test
+    chown system system /sys/class/touch/touch_dev/fod_attn_test
+    chmod 0666 /sys/class/touch/touch_dev/fod_attn_test
+    chown system system /sys/class/touch/touch_dev/fac_dt2w_test
+    chmod 0666 /sys/class/touch/touch_dev/fac_dt2w_test
+
+    start panel-info-sh
+
+
+on charger
+    write /sys/class/touch/touch_dev/touch_doze_analysis 6
+
+service touchfeature-service /system/bin/songyuan-touchfeature-wrapper.sh
+    interface aidl  vendor.xiaomi.hw.touchfeature.ITouchFeature/default
+    class hal
+    user system
+    group system system input
+    capabilities SYS_NICE
+    ioprio rt 4
+    seclabel u:r:recovery:s0
+    disabled
+
+
+service toucheventcheck /odm/bin/toucheventcheck
+    class main
+    user root
+    group system
+    oneshot
+
+service panel-info-sh /system/bin/sh /odm/etc/init.panel_info.sh
+    class core
+    user root
+    oneshot
+    group root system
+    seclabel u:r:recovery:s0
+    disabled
+
+# Do not let panel discovery race the firmware load.  The recovery-side loader
+# publishes this property only after the exact 148712-byte songyuan image has
+# been sent synchronously through fts_force_upgrade.
+on property:vendor.touch.recovery.firmware_ready=1
+    stop touchfeature-service
+    write /sys/class/touch/touch_dev/enable_touch_raw 0
+
+service touch-kmsg-init-sh /system/bin/sh /odm/etc/tp_kmsg_init.sh
+    class main
+    user root
+    group root system
+    oneshot
+    seclabel u:r:recovery:s0
+    disabled

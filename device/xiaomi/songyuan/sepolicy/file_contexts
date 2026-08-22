@@ -1,0 +1,11 @@
+# file_contexts — songyuan recovery
+# SPDX-License-Identifier: Apache-2.0
+
+/odm/bin/hw/vendor\.xiaomi\.hardware\.vibratorfeature\.service    u:object_r:hal_vibrator_default_exec:s0
+
+# The recovery reboot/fastbootd path asks init to update the BCB on misc.
+# Label both the stable songyuan block node and its common by-name links so
+# enforcing init gets the existing misc_block_device write permission.
+/dev/block/sda12                                      u:object_r:misc_block_device:s0
+/dev/block/by-name/misc                               u:object_r:misc_block_device:s0
+/dev/block/bootdevice/by-name/misc                    u:object_r:misc_block_device:s0

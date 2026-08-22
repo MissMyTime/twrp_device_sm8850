@@ -100,6 +100,31 @@ static bool EnsureInstallerCompatibilityPaths() {
 	       EnsureInstallerCompatibilityLink("/system/bin/getprop", "/sbin/getprop");
 }
 
+static std::string GetInstallerActiveSlotSuffix() {
+	std::string slot = PartitionManager.Get_Active_Slot_Suffix();
+	char prop[PROP_VALUE_MAX] = { 0 };
+
+	if (slot != "_a" && slot != "_b") {
+		property_get("ro.boot.slot_suffix", prop, "");
+		slot = prop;
+		if (slot == "a" || slot == "b")
+			slot.insert(0, "_");
+	}
+
+	if (slot != "_a" && slot != "_b") {
+		memset(prop, 0, sizeof(prop));
+		property_get("ro.boot.slot", prop, "");
+		slot = prop;
+		if (slot == "a" || slot == "b")
+			slot.insert(0, "_");
+	}
+
+	if (slot != "_a" && slot != "_b")
+		slot.clear();
+
+	return slot;
+}
+
 static int Install_Theme(const char* path, ZipArchiveHandle Zip) {
 #ifdef TW_OEM_BUILD // We don't do custom themes in OEM builds
 	return INSTALL_CORRUPT;
@@ -162,15 +187,16 @@ static int Prepare_Update_Binary(ZipArchiveHandle Zip) {
 		return INSTALL_ERROR;
 	}
 
-	// Inject /sbin into the update-binary script's PATH
-	// AnyKernel3 and other zip installers set their own PATH which excludes /sbin.
-	// We prepend /sbin so our bootctl wrapper is found.
+	// Keep recovery tools available to legacy shell installers. AnyKernel3 creates
+	// its own BusyBox tree later, so its getprop compatibility hook is injected
+	// after that tree is populated.
 	{
 		std::ifstream infile(TMP_UPDATER_BINARY_PATH);
 		std::string script((std::istreambuf_iterator<char>(infile)),
 							std::istreambuf_iterator<char>());
 		infile.close();
-		if (script.find("/sbin") == std::string::npos) {
+		bool modified = false;
+		if (script.find("TWRP_RECOVERY_PATH_COMPAT") == std::string::npos) {
 			std::string shebang;
 			if (script.length() > 2 && script[0] == '#' && script[1] == '!') {
 				size_t nl = script.find('\n');
@@ -179,11 +205,115 @@ static int Prepare_Update_Binary(ZipArchiveHandle Zip) {
 					script = script.substr(nl + 1);
 				}
 			}
-			script = shebang + "export PATH=\"/sbin:$PATH\"\n" + script;
+			script = shebang +
+				"# TWRP_RECOVERY_PATH_COMPAT\n"
+				"export PATH=\"/tmp:/sbin:$PATH\"\n" + script;
+			modified = true;
+		}
+
+		const std::string ak3_setup_marker = "setup_env;";
+		const bool is_anykernel3 =
+			script.find("AnyKernel3") != std::string::npos &&
+			script.find(ak3_setup_marker) != std::string::npos &&
+			script.find("anykernel.sh") != std::string::npos;
+		if (is_anykernel3 &&
+				script.find("TWRP_AK3_POST_SETUP_SLOT_COMPAT") == std::string::npos) {
+			size_t marker = script.find(ak3_setup_marker);
+			if (marker != std::string::npos) {
+				marker += ak3_setup_marker.length();
+				const std::string active_slot = GetInstallerActiveSlotSuffix();
+				const std::string slot_hook =
+					"\n# TWRP_AK3_POST_SETUP_SLOT_COMPAT\n"
+					"TWRP_AK3_SLOT=\"" + active_slot + "\"\n"
+					"if [ \"$TWRP_AK3_SLOT\" != \"_a\" ] && [ \"$TWRP_AK3_SLOT\" != \"_b\" ]; then\n"
+					"  TWRP_AK3_SLOT=\"$(/tmp/getprop ro.boot.slot_suffix 2>/dev/null)\"\n"
+					"fi\n"
+					"case \"$TWRP_AK3_SLOT\" in\n"
+					"  _a|_b) ;;\n"
+					"  *) TWRP_AK3_SLOT=\"\" ;;\n"
+					"esac\n"
+					"if [ \"$TWRP_AK3_SLOT\" ] && [ -f \"$AKHOME/tools/ak3-core.sh\" ]; then\n"
+					"  awk -v slot=\"$TWRP_AK3_SLOT\" '\n"
+					"    index($0, \"SLOT=$(getprop ro.boot.slot_suffix\") {\n"
+					"      print \"      SLOT=\\\"\" slot \"\\\"; # TWRP_AK3_SLOT_FIXED\";\n"
+					"      next;\n"
+					"    }\n"
+					"    { print }\n"
+					"  ' \"$AKHOME/tools/ak3-core.sh\" > \"$AKHOME/tools/ak3-core.sh.twrp\"\n"
+					"  if grep -q 'TWRP_AK3_SLOT_FIXED' \"$AKHOME/tools/ak3-core.sh.twrp\"; then\n"
+					"    mv -f \"$AKHOME/tools/ak3-core.sh.twrp\" \"$AKHOME/tools/ak3-core.sh\"\n"
+					"    ui_print \"AK3 active slot fixed: $TWRP_AK3_SLOT\"\n"
+					"  else\n"
+					"    rm -f \"$AKHOME/tools/ak3-core.sh.twrp\"\n"
+					"    ui_print \"Warning: unsupported AK3 slot detection layout\"\n"
+					"  fi\n"
+					"fi\n"
+					"ui_print \"TWRP active slot: $TWRP_AK3_SLOT\"\n";
+				const std::string volkey_hook = R"AK3(
+# TWRP_AK3_POST_SETUP_VOLKEY_COMPAT
+if [ -f "$AKHOME/anykernel.sh" ] &&
+   grep -q 'timeout 0\.1 getevent -qlc 1' "$AKHOME/anykernel.sh" &&
+   ! grep -q 'TWRP_AK3_VOLKEY_FIXED' "$AKHOME/anykernel.sh"; then
+  awk '
+    BEGIN { replacing = 0 }
+    /^[[:space:]]*choose_with_volkey\(\)[[:space:]]*\{/ {
+      print "# TWRP_AK3_VOLKEY_FIXED"
+      print "choose_with_volkey() {"
+      print "  local key i=0"
+      print "  rm -f /tmp/twrp-ak3-volkey /tmp/twrp-ak3-volkey.pending"
+      print "  echo 1 > /tmp/twrp-ak3-volkey-arm"
+      print "  while [ \"$i\" -lt 100 ]; do"
+      print "    if [ -s /tmp/twrp-ak3-volkey ]; then"
+      print "      IFS= read -r key < /tmp/twrp-ak3-volkey"
+      print "      rm -f /tmp/twrp-ak3-volkey-arm /tmp/twrp-ak3-volkey"
+      print "      case \"$key\" in"
+      print "        KEY_VOLUMEUP|KEY_VOLUMEDOWN)"
+      print "          echo \"TWRP_AK3_VOLKEY=$key\" >&2"
+      print "          echo \"$key\""
+      print "          return"
+      print "          ;;"
+      print "      esac"
+      print "    fi"
+      print "    sleep 0.1"
+      print "    i=$((i + 1))"
+      print "  done"
+      print "  rm -f /tmp/twrp-ak3-volkey-arm /tmp/twrp-ak3-volkey"
+      print "  echo timeout"
+      print "}"
+      replacing = 1
+      next
+    }
+    replacing {
+      if ($0 ~ /^[[:space:]]*}[[:space:]]*$/) replacing = 0
+      next
+    }
+    { print }
+  ' "$AKHOME/anykernel.sh" > "$AKHOME/anykernel.sh.twrp"
+  if grep -q 'TWRP_AK3_VOLKEY_FIXED' "$AKHOME/anykernel.sh.twrp"; then
+    mv -f "$AKHOME/anykernel.sh.twrp" "$AKHOME/anykernel.sh"
+    chmod 0755 "$AKHOME/anykernel.sh"
+    ui_print "AK3 volume-key detection fixed by TWRP (v4)"
+  else
+    rm -f "$AKHOME/anykernel.sh.twrp"
+    ui_print "Warning: unsupported AK3 volume-key layout"
+  fi
+fi
+)AK3";
+				script.insert(marker, slot_hook + volkey_hook);
+				modified = true;
+				LOGINFO("Injected AnyKernel3 core slot fix (slot=%s)\n",
+						active_slot.c_str());
+				LOGINFO("Injected AnyKernel3 volume-key compatibility hook\n");
+			} else {
+				LOGINFO("AnyKernel3 updater found without the expected setup_env marker\n");
+			}
+		}
+
+		if (modified) {
 			std::ofstream outfile(TMP_UPDATER_BINARY_PATH);
 			outfile << script;
 			outfile.close();
-			LOGINFO("Injected /sbin into update-binary PATH\n");
+			chmod(TMP_UPDATER_BINARY_PATH, 0755);
 		}
 	}
 
@@ -224,11 +354,11 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
 		LOGERR("Unknown zip type %i\n", ztype);
 		ret_val = INSTALL_CORRUPT;
 	}
-    if (ret_val) {
-        close(pipe_fd[0]);
-        close(pipe_fd[1]);
-        return ret_val;
-    }
+	if (ret_val) {
+		close(pipe_fd[0]);
+		close(pipe_fd[1]);
+		return ret_val;
+	}
 
 	if (!EnsureInstallerCompatibilityPaths()) {
 		gui_err("installer_compat_paths=Required installer shell/getprop compatibility paths are unavailable.");
@@ -251,7 +381,6 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
 		// Create a /tmp/getprop wrapper that hardcodes the slot values and falls
 		// back to /sbin/getprop for all other properties.
 		char slot_suffix[PROP_VALUE_MAX] = {0};
-		char slot_raw[PROP_VALUE_MAX] = {0};
 		property_get("ro.boot.slot_suffix", slot_suffix, "");
 		if (slot_suffix[0] == '\0')
 			property_get("ro.boot.slot", slot_suffix, "");
@@ -277,37 +406,49 @@ static int Run_Update_Binary(const char *path, int* wipe_cache, zip_type ztype) 
 			fclose(f);
 			chmod("/tmp/getprop", 0755);
 			LOGINFO("Created /tmp/getprop wrapper for AK3 slot detection (slot=%s)\n", slot_val.c_str());
-			// AK3 setup_bb() creates busybox getprop in /tmp/anykernel/bin and puts it first in PATH.
-			// Pre-create wrappers there so busybox --install -s fails (file exists).
-			mkdir("/tmp/anykernel", 0755);
-			mkdir("/tmp/anykernel/bin", 0755);
-			mkdir("/tmp/anykernel/tools", 0755);
-			TWFunc::Exec_Cmd("cp -f /tmp/getprop /tmp/anykernel/bin/getprop && chmod 755 /tmp/anykernel/bin/getprop");
-			TWFunc::Exec_Cmd("cp -f /tmp/getprop /tmp/anykernel/tools/getprop && chmod 755 /tmp/anykernel/tools/getprop");
-			LOGINFO("Pre-created /tmp/anykernel/{bin,tools}/getprop to block busybox override\n");
 		}
-		// Also create bootctl wrapper for any other installers that use it
+		// Also create bootctl wrapper for any other installers that use it.
+		// Some legacy ROM zips call bootctl from update-binary to switch slots.
+		// Defer that state change: the GUI worker applies it only after the
+		// installer exits successfully, so a failed package cannot arm a bad slot.
 		f = fopen("/tmp/bootctl", "w");
-		if (f) {
-			fprintf(f, "#!/sbin/sh\n");
-			fprintf(f, "if [ -z \"$1\" ]; then\n");
-			fprintf(f, "    echo \"[getprop.wrapper]: listing properties...\"\n");
-			fprintf(f, "    /sbin/getprop 2>/dev/null\n");
-			fprintf(f, "    exit 0\n");
-			fprintf(f, "fi\n");
-			fprintf(f, "case \"$1\" in\n");
-			fprintf(f, "    get-current-slot)\n");
-			fprintf(f, "        case \"%s\" in _a|a) echo 0 ;; _b|b) echo 1 ;; *) echo 0 ;; esac\n", slot_val.c_str());
-			fprintf(f, "        ;;\n");
-			fprintf(f, "    get-suffix)\n");
-			fprintf(f, "        case \"$2\" in 0) echo \"_a\" ;; 1) echo \"_b\" ;; *) echo \"_a\" ;; esac\n");
-			fprintf(f, "        ;;\n");
-			fprintf(f, "    *) echo \"Usage: bootctl {get-current-slot|get-suffix <slot>}\"; exit 1 ;;\n");
-			fprintf(f, "esac\n");
-			fprintf(f, "exit 0\n");
-			fclose(f);
-			chmod("/tmp/bootctl", 0755);
-		}
+			if (f) {
+				fprintf(f, "#!/sbin/sh\n");
+				fprintf(f, "record_slot() {\n");
+				fprintf(f, "    case \"$1\" in\n");
+				fprintf(f, "        0|a|A|_a|_A) echo A > /tmp/twrp_requested_slot; echo 0 ;;\n");
+				fprintf(f, "        1|b|B|_b|_B) echo B > /tmp/twrp_requested_slot; echo 0 ;;\n");
+				fprintf(f, "        *) echo 0 ;;\n");
+				fprintf(f, "    esac\n");
+				fprintf(f, "}\n");
+				fprintf(f, "if [ -z \"$1\" ]; then\n");
+				fprintf(f, "    /sbin/bootctl 2>/dev/null || true\n");
+				fprintf(f, "    exit 0\n");
+				fprintf(f, "fi\n");
+				fprintf(f, "case \"$1\" in\n");
+				fprintf(f, "    get-current-slot)\n");
+				fprintf(f, "        case \"%s\" in _a|a) echo 0 ;; _b|b) echo 1 ;; *) echo 0 ;; esac\n", slot_val.c_str());
+				fprintf(f, "        ;;\n");
+				fprintf(f, "    get-suffix)\n");
+				fprintf(f, "        case \"$2\" in 0) echo \"_a\" ;; 1) echo \"_b\" ;; \"\") echo \"%s\" ;; *) echo \"_a\" ;; esac\n", slot_val.c_str());
+				fprintf(f, "        ;;\n");
+				fprintf(f, "    get-number-slots)\n");
+				fprintf(f, "        echo 2\n");
+				fprintf(f, "        ;;\n");
+				fprintf(f, "    set-active-boot-slot|set_active_boot_slot|set-active-slot|set_active_slot|set-active|set_active|set-current-slot|set_current_slot)\n");
+				fprintf(f, "        record_slot \"$2\"\n");
+				fprintf(f, "        ;;\n");
+				fprintf(f, "    is-slot-bootable|is-slot-marked-successful|mark-boot-successful)\n");
+				fprintf(f, "        /sbin/bootctl \"$@\" 2>/dev/null || true\n");
+				fprintf(f, "        ;;\n");
+				fprintf(f, "    *)\n");
+				fprintf(f, "        /sbin/bootctl \"$@\" 2>/dev/null || true\n");
+				fprintf(f, "        ;;\n");
+				fprintf(f, "esac\n");
+				fprintf(f, "exit 0\n");
+				fclose(f);
+				chmod("/tmp/bootctl", 0755);
+			}
 		// Ensure /sbin/bootctl also exists as fallback
 		chmod("/sbin/bootctl", 0755);
 		// Prioritize /tmp and /sbin in PATH before system paths
@@ -383,6 +524,7 @@ bool isUpdatePkg(ZipArchiveHandle Zip) {
 int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 	int ret_val, zip_verify = 1, unmount_system = 1, reflashtwrp = 0;
 
+	DataManager::SetValue("tw_zip_is_update_package", 0);
 	gui_msg(Msg("installing_zip=Installing zip file '{1}'")(path));
 	if (strlen(path) < 9 || strncmp(path, "/sideload", 9) != 0) {
 		string digest_str;
@@ -438,6 +580,7 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 	}
 
 	bool _isUpdatePkg = isUpdatePkg(Zip), _isABUpdatePkg = false;
+	DataManager::SetValue("tw_zip_is_update_package", _isUpdatePkg ? 1 : 0);
 
 	if (_isUpdatePkg && !PartitionManager.Repair_Super_Metadata_Size(true)) {
 		gui_err("super_repair_pre_install=Unable to verify or repair logical partition capacity before installing the update.");
@@ -499,7 +642,8 @@ int TWinstall_zip(const char* path, int* wipe_cache, bool check_for_digest) {
 				}
 				gui_warn("flash_ab_reboot=To flash additional zips, please reboot recovery to switch to the updated slot.");
 				DataManager::GetValue(TW_AUTO_REFLASHTWRP_VAR, reflashtwrp);
-				if (reflashtwrp) {
+				if (reflashtwrp &&
+						!TWFunc::Path_Exists("/dev/block/bootdevice/by-name/recovery_a")) {
 					twrpRepacker repacker;
 					repacker.Flash_Current_Twrp();
 				}

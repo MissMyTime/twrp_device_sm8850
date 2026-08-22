@@ -4,8 +4,8 @@ This document describes the purpose of each source modification under `patches/`
 
 Patches are grouped by scope:
 
-- `patches/common/` — applied to **all four devices**. Recovery framework changes plus the Weaver retry adjustment.
-- `patches/<device>/` — applied **only** when building that device. `neo8` contains its recovery framework and KeyMint overrides; `nezha` contains its KeyMint implementation; `myron` contains its MTP, Format Data UI guard and splash overrides; `annibale` keeps stock vold.
+- `patches/common/` — applied to **all five devices**. Recovery framework and installer compatibility changes.
+- `patches/<device>/` — applied **only** when building that device. `songyuan`, `neo8` and `nezha` each contain separate security implementations; `myron` contains its MTP, Format Data UI guard and splash overrides; `annibale` keeps stock vold.
 
 `scripts/apply-patches.sh <twrp-source> <codename>` always applies `common` first, then the codename's own directory.
 
@@ -45,6 +45,10 @@ Runs the bounded Virtual A/B snapshot check on an isolated GUI page and requires
 
 Myron-only koi splash resources.
 
+### `patches/songyuan/files/`
+
+The exact source set used by the verified K100PM build. It contains Songyuan-only FBE preparation, QTI KeyMint upgrade-write protection, Thales Weaver handling, MTP/Fastbootd guards, touch/navigation UI and input force-feedback haptics. Its `Decrypt.cpp`, `KeyStorage.cpp` and `Weaver1.cpp` must not be copied to another device set.
+
 ### `patches/neo8/patches/system_vold/key_storage_recovery_safety.patch`
 
 | File | Change Description |
@@ -74,9 +78,9 @@ Weaver HAL retry/wait adjustment, needed by all four devices regardless of secur
 
 ### `patches/neo8/files/system/vold/` and `patches/nezha/files/system/vold/`
 
-`Decrypt.cpp` + `KeyStorage.cpp`: before decryption, pin the KeyMint environment (OS version / OS patch level / vendor patch level) to the installed system's real values, so the recovery's spoofed platform version (`99.87.36` / `2099-12-31`) is not treated as a newer environment that would trigger a KeyMint key upgrade on every boot. Values can be overridden via `twrp.keymint.osver/ospatch/venpatch`.
+`Decrypt.cpp` + `KeyStorage.cpp`: before decryption, pin the KeyMint environment (OS version / OS patch level / vendor patch level) to the installed system's real values, so the recovery's spoofed platform version (`99.87.36` / `2099-12-31`) is not treated as a newer environment that would trigger a KeyMint key upgrade on every boot. Values can be overridden via `twrp.keymint.osver/ospatch/venpatch` for those two device sets only.
 
-**Do not apply these to myron/annibale.** Their default KeyMint services are QTI, while StrongBox/Weaver use NXP backends. Myron has its own non-switching safety baseline; Annibale retains its validated stock vold path.
+**Do not apply these to myron, annibale or songyuan.** Songyuan uses its own QTI + Thales implementation with real build properties and no override channel. Myron has its own non-switching safety baseline; Annibale retains its validated stock vold path.
 
 ## How to Apply
 

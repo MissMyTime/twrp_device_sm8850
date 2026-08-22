@@ -23,6 +23,7 @@ device_patch_dir() {
     case "$1" in
         myron)            echo "myron" ;;
         annibale)         echo "annibale" ;;
+        songyuan)         echo "songyuan" ;;
         nezha)            echo "nezha" ;;
         RE6402L1|neo8)    echo "neo8" ;;
         *)                echo "" ;;

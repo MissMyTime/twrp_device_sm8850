@@ -1,0 +1,41 @@
+{
+    "name":"SMotion",
+    "version":"2.0",
+    "product":"songyuan",
+
+    "SUPER CORE": {
+        "MODE":10001,
+        "ALL_DEFAULT_ENABLE":true,
+        "DEFAULT":true,
+        "APP":[
+        ],
+        "LEVEL":1  // range[1, 2, 3]
+    },
+
+    "SUPER ALGO": {
+        "MODE":10003,
+        "ALL_DEFAULT_ENABLE":true,
+        "DEFAULT":true,
+        "APP":[
+        ],
+        "LEVEL":2  // range[1, 2, 3]
+    },
+
+    "SUPER_MISTOUCH": {
+        "MODE":10004,
+        "ALL_DEFAULT_ENABLE":true,
+        "DEFAULT":true,
+        "APP":[
+        ],
+        "LEVEL":2  // range[1, 2, 3]
+    },
+
+    "SUPER_HOTAREA": {
+        "MODE":10005,
+        "ALL_DEFAULT_ENABLE":true,
+        "DEFAULT":true,
+        "APP":[
+        ],
+        "LEVEL":2  // range[1, 2, 3]
+    }
+}

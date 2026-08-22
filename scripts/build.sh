@@ -7,16 +7,12 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SCRIPT_DIR}/.."
-CODENAME="${1:-}"
+REQUESTED_CODENAME="${1:-}"
+CODENAME="$REQUESTED_CODENAME"
 VENDOR="${2:-}"
 TWRP_SOURCE="${TWRP_SOURCE:-$(pwd)}"
-if [ -n "${LUNCH_TARGET:-}" ]; then
-    LUNCH_TARGET="$LUNCH_TARGET"
-else
-    LUNCH_TARGET="twrp_${CODENAME}-bp2a-eng"
-fi
 
-if [ -z "$CODENAME" ]; then
+if [ -z "$REQUESTED_CODENAME" ]; then
     echo "Usage: ./scripts/build.sh <codename> [vendor]"
     echo ""
     echo "Supported devices:"
@@ -30,6 +26,18 @@ if [ -z "$CODENAME" ]; then
     echo ""
     echo "Example: ./scripts/build.sh RE6402L1 realme"
     exit 1
+fi
+
+if [ "$CODENAME" = "neo8" ]; then
+    CODENAME="RE6402L1"
+fi
+
+if [ -n "${LUNCH_TARGET:-}" ]; then
+    LUNCH_TARGET="$LUNCH_TARGET"
+elif [ "$CODENAME" = "myron" ]; then
+    LUNCH_TARGET="twrp_myron-myron-eng"
+else
+    LUNCH_TARGET="twrp_${CODENAME}-bp2a-eng"
 fi
 
 # Auto-detect vendor if not provided
@@ -103,6 +111,35 @@ if [ "$CODENAME" = "myron" ]; then
     }
 fi
 
+if [ "$CODENAME" = "songyuan" ]; then
+    SONGYUAN_VOLD="$REPO_ROOT/patches/songyuan/files/system/vold"
+    for source_file in Decrypt.cpp KeyStorage.cpp Weaver1.cpp; do
+        [ -s "$SONGYUAN_VOLD/$source_file" ] || {
+            echo "Error: Songyuan security source is missing: $source_file"
+            exit 1
+        }
+    done
+
+    if grep -RqiE 'neo8|nezha|RE6402L1|twrp\.keymint\.' \
+            "$SONGYUAN_VOLD" \
+            "$REPO_ROOT/device/xiaomi/songyuan/BoardConfig.mk" \
+            "$REPO_ROOT/device/xiaomi/songyuan/system.prop"; then
+        echo "Error: Songyuan contains another device or a KeyMint override channel."
+        exit 1
+    fi
+
+    grep -q 'Refusing KeyMint-upgraded blob' \
+        "$TWRP_SOURCE/system/vold/KeyStorage.cpp" || {
+        echo "Error: Songyuan KeyMint upgrade-write protection is missing."
+        exit 1
+    }
+    grep -q 'songyuan_mtp_adb' \
+        "$TWRP_SOURCE/bootable/recovery/partitionmanager.cpp" || {
+        echo "Error: Songyuan MTP/ADB composite configuration is missing."
+        exit 1
+    }
+fi
+
 # Build
 cd "$TWRP_SOURCE"
 source build/envsetup.sh
@@ -151,6 +188,34 @@ if [ "$CODENAME" = "myron" ]; then
     "$AVBTOOL" info_image --image "$RECOVERY_IMAGE" | \
         grep -Eq 'Rollback Index:[[:space:]]+0$' || {
         echo "Error: recovery AVB rollback index is not the verified 0."
+        exit 1
+    }
+fi
+
+if [ "$CODENAME" = "songyuan" ]; then
+    RECOVERY_PROP="$RECOVERY_ROOT/prop.default"
+    check_songyuan_prop() {
+        local name="$1"
+        local value="$2"
+        grep -qx "$name=$value" "$RECOVERY_PROP" || {
+            echo "Error: Songyuan recovery property mismatch: expected $name=$value"
+            exit 1
+        }
+    }
+
+    check_songyuan_prop ro.build.version.release 16
+    check_songyuan_prop ro.build.version.security_patch 2026-07-01
+    check_songyuan_prop ro.vendor.build.security_patch 2026-08-01
+
+    SONGYUAN_OTA_COUNT=$(grep '^ro.product.ab_ota_partitions=' "$RECOVERY_PROP" | \
+        cut -d= -f2- | tr ',' '\n' | sed '/^$/d' | wc -l)
+    if [ "$SONGYUAN_OTA_COUNT" -ne 58 ]; then
+        echo "Error: Songyuan OTA partition list contains $SONGYUAN_OTA_COUNT entries, expected 58."
+        exit 1
+    fi
+
+    [ -x "$RECOVERY_ROOT/system/bin/songyuan-security-start.sh" ] || {
+        echo "Error: Songyuan security startup gate is missing from the ramdisk."
         exit 1
     }
 fi

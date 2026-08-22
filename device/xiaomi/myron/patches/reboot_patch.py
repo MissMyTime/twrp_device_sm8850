@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Apply TWRP 16 reboot patches for myron device."""
 import sys
+from pathlib import Path
 
-FILE = '/root/twrp16/bootable/recovery/twrp-functions.cpp'
+SOURCE_ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else '.').resolve()
+FILE = SOURCE_ROOT / 'bootable/recovery/twrp-functions.cpp'
 
-with open(FILE, 'r') as f:
+with FILE.open('r') as f:
     text = f.read()
 
 changes = 0
@@ -29,6 +31,6 @@ if changes == 0:
     print('WARNING: No patches applied! Check source file.')
     sys.exit(1)
 
-with open(FILE, 'w') as f:
+with FILE.open('w') as f:
     f.write(text)
 print(f'Done: {changes}/2 patches applied')

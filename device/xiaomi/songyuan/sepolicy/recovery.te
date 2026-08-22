@@ -1,0 +1,18 @@
+# recovery.te — songyuan recovery
+# SPDX-License-Identifier: Apache-2.0
+
+permissive recovery;
+permissive hal_vibrator_default;
+
+hal_client_domain(recovery, hal_vibrator)
+
+# The modem firmware partition is VFAT in recovery.  IPA/CNSS firmware is
+# requested by the enforcing ueventd domain through the firmware sysfs
+# fallback, so recovery being permissive does not cover these reads.
+allow ueventd vfat:dir { getattr open read search };
+allow ueventd vfat:file { getattr map open read };
+
+# Fastbootd talks to the recovery-labelled boot service in this compact
+# ramdisk.  Without the binder call permission its BootControl lookup fails
+# even though the service itself is running.
+binder_call(fastbootd, recovery)

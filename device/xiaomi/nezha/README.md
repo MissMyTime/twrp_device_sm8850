@@ -12,7 +12,7 @@
 
 ## 构建说明
 
-在 `/root/twrp16` 下执行：
+在 `~/android/twrp` 下执行：
 
 ```bash
 source build/envsetup.sh

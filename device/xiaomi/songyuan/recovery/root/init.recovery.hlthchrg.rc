@@ -1,0 +1,5 @@
+# init.recovery.hlthchrg.rc — placeholder
+# SPDX-License-Identifier: Apache-2.0
+
+on property:twrp.modules.loaded=true
+    wait /sys/class/power_supply/battery
