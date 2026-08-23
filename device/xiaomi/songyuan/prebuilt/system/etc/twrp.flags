@@ -22,6 +22,7 @@
 /boot            emmc     /dev/block/bootdevice/by-name/boot          flags=display="Boot";backup=1;flashimg=1;slotselect
 /init_boot       emmc     /dev/block/bootdevice/by-name/init_boot     flags=display="Init_Boot";backup=1;flashimg=1;slotselect
 /vendor_boot     emmc     /dev/block/bootdevice/by-name/vendor_boot   flags=display="Vendor_Boot";backup=1;flashimg=1;slotselect
+/pvmfw           emmc     /dev/block/bootdevice/by-name/pvmfw         flags=display="PVMFW";backup=1;flashimg=1;slotselect
 /dtbo            emmc     /dev/block/bootdevice/by-name/dtbo          flags=display="Dtbo";backup=1;flashimg=1;slotselect
 /recovery        emmc     /dev/block/bootdevice/by-name/recovery      flags=display="Recovery";backup=1;flashimg=1;slotselect
 /vbmeta          emmc     /dev/block/bootdevice/by-name/vbmeta        flags=display="Vbmeta";backup=1;flashimg=1;slotselect

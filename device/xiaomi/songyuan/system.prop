@@ -19,8 +19,11 @@ ro.twrp.boot=1
 
 # Prepare metadata-encrypted Data before choosing the first credential page.
 # Keep the active vendor/ODM mounts available for the K100PM security HALs and
-# use the bounded post-decrypt media bind path.
+# use the bounded post-decrypt media bind path. Keep the default credential
+# blocked until songyuan-security-start publishes the complete stock chain.
 twrp.recovery.prepare_fbe=1
 twrp.recovery.keep_runtime_partitions=1
 twrp.recovery.post_decrypt_media_bind=1
+twrp.recovery.fbe_ready_property=twrp.songyuan.security_ready
+twrp.recovery.fbe_ready_timeout_ms=30000
 twrp.recovery.skip_default_fbe_password=1

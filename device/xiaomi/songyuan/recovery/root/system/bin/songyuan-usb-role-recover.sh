@@ -17,7 +17,26 @@ find_role_path() {
             return 0
         fi
     done
+    [ -r "$MODE" ] && return 0
     return 1
+}
+
+read_usb_role() {
+    detected_role=""
+    for node in "$ROLE" "$MODE"; do
+        [ -r "$node" ] || continue
+        value=$(cat "$node" 2>/dev/null)
+        case "$value" in
+            host)
+                echo host
+                return 0
+                ;;
+            device|peripheral)
+                detected_role=device
+                ;;
+        esac
+    done
+    echo "$detected_role"
 }
 
 log_line() {
@@ -38,7 +57,18 @@ rebind_current_composite() {
     log_line "rebinding existing $config composite on $controller"
     [ -w "$UDC" ] && echo none > "$UDC" 2>/dev/null
     [ -w "$MODE" ] && echo peripheral > "$MODE" 2>/dev/null
-    sleep 1
+    case "$config" in
+        *adb*)
+            setprop ctl.start adbd
+            wait_count=0
+            while [ "$wait_count" -lt 20 ] &&
+                  [ "$(getprop sys.usb.ffs.ready 2>/dev/null)" != 1 ]; do
+                wait_count=$((wait_count + 1))
+                sleep 0.10
+            done
+            ;;
+    esac
+    sleep 0.25
     if [ -n "$controller" ] && [ -w "$UDC" ]; then
         echo "$controller" > "$UDC" 2>/dev/null
     fi
@@ -74,6 +104,20 @@ restore_adb_only() {
     log_line "adb fallback ended with UDC state $(udc_state)"
 }
 
+quiesce_gadget_for_host() {
+    # The Type-C port cannot host a disk and expose a configfs gadget at the
+    # same time. Stop FunctionFS before OTG I/O so init cannot repeatedly
+    # rebind the UDC and reset the attached disk during a copy.
+    setprop twrp.usb.host_active 1
+    setprop ctl.stop adbd
+    if [ -w "$UDC" ]; then
+        bound_controller=$(cat "$UDC" 2>/dev/null)
+        if [ -n "$bound_controller" ] && [ "$bound_controller" != none ]; then
+            echo none > "$UDC" 2>/dev/null
+        fi
+    fi
+}
+
 seen_host=0
 setprop twrp.usb.host_active 0
 log_line "monitor started"
@@ -86,16 +130,10 @@ while true; do
         continue
     fi
 
-    role=$(cat "$ROLE" 2>/dev/null)
+    role=$(read_usb_role)
     case "$role" in
         host)
-            setprop twrp.usb.host_active 1
-            if [ -w "$UDC" ]; then
-                bound_controller=$(cat "$UDC" 2>/dev/null)
-                if [ -n "$bound_controller" ] && [ "$bound_controller" != none ]; then
-                    echo none > "$UDC" 2>/dev/null
-                fi
-            fi
+            quiesce_gadget_for_host
             if [ "$seen_host" != 1 ]; then
                 log_line "USB role entered host mode"
             fi
@@ -104,7 +142,7 @@ while true; do
         device|peripheral)
             if [ "$seen_host" = 1 ]; then
                 sleep 2
-                role=$(cat "$ROLE" 2>/dev/null)
+                role=$(read_usb_role)
                 if [ "$role" != device ] && [ "$role" != peripheral ]; then
                     sleep 1
                     continue

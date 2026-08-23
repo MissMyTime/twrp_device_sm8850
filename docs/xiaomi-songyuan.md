@@ -10,6 +10,10 @@
 - 使用官方 `focaltech_touch_3685g_1.ko` 与 148712 字节触摸固件，不使用 recovery 坐标翻转。
 - 支持 ADB、MTP、WLAN、USB-OTG、Fastbootd、亮度和输入 FF 振动。
 - 官方完整包中的 58 个 A/B OTA 分区已逐项写入 `AB_OTA_PARTITIONS`。
+- 安全服务链就绪前不会尝试无锁屏默认凭据；无密码、图案、PIN 和密码路径使用同一套官方服务链。
+- Fastbootd 可识别 `init_boot` 和 `pvmfw`，并按稳定的 by-name 路径为 UFS 分区设置标签。
+- 旧版刷机脚本可使用 `/sbin/sh`、`/sbin/bash`、`/sbin/bas` 和 `/sbin/getprop`。
+- USB-OTG 进入主机模式时会先释放 ADB/MTP gadget，避免大文件复制期间反复复位 U 盘。
 
 ## 构建
 

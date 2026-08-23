@@ -23,7 +23,7 @@ PRODUCT_PACKAGES += \
     mkfs.f2fs \
     sload_f2fs \
     fsck.erofs \
-    bash \
+    songyuan_installer_compat_links \
     sqlite3.recovery \
     strace
 
@@ -61,6 +61,7 @@ PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/prebuilt/odm/firmware/focaltech_ts_fw_songyuan.bin:recovery/root/vendor/firmware/focaltech_ts_fw_songyuan.bin
 
 PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/prebuilt/system/bin/bash:recovery/root/system/bin/bash \
     $(DEVICE_PATH)/prebuilt/system/bin/se_omapi:recovery/root/system/bin/se_omapi \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-dhcp.sh:recovery/root/system/bin/wifi-dhcp.sh \
     $(DEVICE_PATH)/prebuilt/system/bin/wifi-load-modules.sh:recovery/root/system/bin/wifi-load-modules.sh \

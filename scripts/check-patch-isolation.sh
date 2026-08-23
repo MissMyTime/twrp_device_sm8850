@@ -224,6 +224,17 @@ grep -q 'EvolutionX-17' \
 grep -q 'boot-fastboot' \
     "$REPO_ROOT/device/xiaomi/myron/prebuilt/system/bin/myron-reboot-fastbootd.sh" || \
     fail "Myron Fastbootd BCB request is missing"
+[ -x "$REPO_ROOT/device/xiaomi/myron/recovery/root/system/bin/myron-fastbootd-block-labels.sh" ] || \
+    fail "Myron Fastbootd block-label helper must be executable"
+grep -q 'myron-fastbootd-block-labels.sh' \
+    "$REPO_ROOT/device/xiaomi/myron/recovery/root/init.recovery.qcom.rc" || \
+    fail "Myron Fastbootd block-label helper is not started"
+grep -q 'pvmfw_a pvmfw_b' \
+    "$REPO_ROOT/device/xiaomi/myron/recovery/root/system/bin/myron-fastbootd-block-labels.sh" || \
+    fail "Myron Fastbootd pvmfw targets are missing"
+grep -q '^mi_product[[:space:]].*/mi_product[[:space:]]' \
+    "$REPO_ROOT/device/xiaomi/myron/recovery.fstab" || \
+    fail "Myron mi_product logical partition is missing"
 
 printf '%s  %s\n' \
     '39b6f96e4ef240066464ccf3223dd0119b2922c279a878a3af74bd79349136d8' \
@@ -350,6 +361,21 @@ diff -u "$REPO_ROOT/patches/songyuan/ota-partitions.txt" <(awk '
     fail "Songyuan OTA partition list does not match the verified payload manifest"
 [ "$(stat -c '%s' "$REPO_ROOT/device/xiaomi/songyuan/prebuilt/odm/firmware/focaltech_ts_fw_songyuan.bin")" -eq 148712 ] || \
     fail "Songyuan touch firmware size is not the verified 148712 bytes"
+grep -q '^/pvmfw[[:space:]].*/dev/block/bootdevice/by-name/pvmfw[[:space:]]' \
+    "$REPO_ROOT/device/xiaomi/songyuan/prebuilt/system/etc/twrp.flags" || \
+    fail "Songyuan pvmfw image target is missing"
+grep -q 'songyuan_installer_compat_links' \
+    "$REPO_ROOT/device/xiaomi/songyuan/device.mk" || \
+    fail "Songyuan installer compatibility package is missing"
+grep -q '/sbin/bas' \
+    "$REPO_ROOT/device/xiaomi/songyuan/installer_compat/Android.mk" || \
+    fail "Songyuan legacy bash compatibility path is missing"
+grep -q 'setprop twrp.recovery.skip_default_fbe_password 0' \
+    "$REPO_ROOT/device/xiaomi/songyuan/recovery/root/system/bin/songyuan-security-start.sh" || \
+    fail "Songyuan no-lockscreen decrypt gate is not released after security startup"
+grep -q 'setprop ctl.stop adbd' \
+    "$REPO_ROOT/device/xiaomi/songyuan/recovery/root/system/bin/songyuan-usb-role-recover.sh" || \
+    fail "Songyuan OTG host mode does not release FunctionFS"
 [ ! -d "$REPO_ROOT/device/xiaomi/songyuan/.github" ] || \
     fail "Songyuan device tree must not carry a private release workflow"
 

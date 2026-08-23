@@ -47,6 +47,8 @@ The QTI support libraries and service identities are taken from the official Myr
 - CPU temperature uses the verified `thermal_zone68` node.
 - Evolution X 17 recovery time is restored from its persisted ATS offset after decryption.
 - The Fastbootd menu writes and verifies the recovery BCB request before rebooting to userspace fastboot.
+- Fastbootd resolves and labels the current UFS targets at runtime, so flashing `init_boot` does not depend on unstable `/dev/block/sd*` assignments.
+- The recovery fstab includes the optional `mi_product` logical partition used by newer HyperOS layouts.
 - The Myron theme includes stable language labels and the device-specific koi splash.
 
 ## Build

@@ -9,3 +9,16 @@
 /dev/block/sda12                                      u:object_r:misc_block_device:s0
 /dev/block/by-name/misc                               u:object_r:misc_block_device:s0
 /dev/block/bootdevice/by-name/misc                    u:object_r:misc_block_device:s0
+
+# Ueventd selects the target block-device label from stable by-name aliases.
+# Never key these rules to sda/sdd/sde numbers: UFS LUN letters can change
+# between boots on Songyuan.
+/dev/block/platform/soc/1d84000\.ufshc/by-name/(boot|init_boot|vendor_boot|recovery|dtbo|vbmeta|vbmeta_system|pvmfw)_[ab]    u:object_r:boot_block_device:s0
+/dev/block/platform/soc/1d84000\.ufshc/by-name/super                     u:object_r:super_block_device:s0
+/dev/block/platform/soc/1d84000\.ufshc/by-name/metadata                  u:object_r:metadata_block_device:s0
+/dev/block/platform/soc/1d84000\.ufshc/by-name/userdata                  u:object_r:userdata_block_device:s0
+/dev/block/platform/soc/1d84000\.ufshc/by-name/misc                      u:object_r:misc_block_device:s0
+/dev/block/(by-name|bootdevice/by-name)/(boot|init_boot|vendor_boot|recovery|dtbo|vbmeta|vbmeta_system|pvmfw)_[ab]    u:object_r:boot_block_device:s0
+/dev/block/(by-name|bootdevice/by-name)/super                              u:object_r:super_block_device:s0
+/dev/block/(by-name|bootdevice/by-name)/metadata                           u:object_r:metadata_block_device:s0
+/dev/block/(by-name|bootdevice/by-name)/userdata                           u:object_r:userdata_block_device:s0

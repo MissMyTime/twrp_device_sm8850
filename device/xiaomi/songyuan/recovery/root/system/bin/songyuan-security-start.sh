@@ -11,6 +11,7 @@ log_msg() {
 }
 
 fail_start() {
+    setprop twrp.recovery.skip_default_fbe_password 1
     setprop twrp.songyuan.security_ready 0
     setprop twrp.songyuan.security_error "$1"
     log_msg "$1"
@@ -58,6 +59,7 @@ wait_vendor_ramdisk() {
     return 1
 }
 
+setprop twrp.recovery.skip_default_fbe_password 1
 setprop twrp.songyuan.security_ready 0
 setprop twrp.songyuan.security_error ""
 setprop twrp.songyuan.security_start_started 1
@@ -133,6 +135,9 @@ wait_prop init.svc.weaver_hal_service running 30 || fail_start weaver_not_runnin
 sleep 2
 [ "$(getprop init.svc.weaver_hal_service)" = running ] || fail_start weaver_not_stable
 
+# Only the main recovery process may attempt the no-lockscreen credential, and
+# only after the complete stock K100PM security chain is stable.
+setprop twrp.recovery.skip_default_fbe_password 0
 setprop twrp.songyuan.security_ready 1
 setprop twrp.songyuan.security_error ""
 log_msg "stock K100PM security chain ready from ${modem}"

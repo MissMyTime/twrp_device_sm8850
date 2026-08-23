@@ -161,6 +161,10 @@ on property:sys.usb.config=twrp_mtp_adb
 on property:ro.twrp.fastbootd=1
     stop myron-evox-mtp-keeper
     stop myron-usb-role-recover
+    # Resolve the current UFS targets instead of assuming fixed /dev/block/sd*
+    # numbers. Fastbootd opens the target nodes after following by-name links.
+    exec u:r:recovery:s0 root root -- /system/bin/myron-fastbootd-block-labels.sh
+    setprop sys.usb.config fastboot
 
 # -----------------------------------------------------------------------------
 # myron-specific services
