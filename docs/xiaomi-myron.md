@@ -20,9 +20,11 @@
 
 Myron uses QTI KeyMint with NXP StrongBox and Weaver services. The recovery tree preserves this device-specific chain and does not use the Neo8 or Nezha vold implementations.
 
-The recovery starts the secure-element services in the verified order, avoids an early default-password attempt before the Data mapping exists, and creates the media bind only after successful FBE decryption. These changes improve official HyperOS and AOSP compatibility without writing recovery-generated KeyMint upgrades back to user data.
+Before the first decrypt request, recovery reads Android 16 or 17 from the current-slot system, waits for the real platform and vendor security-patch properties, then restarts QTI KeyMint and Keystore2 in that environment. Secure-element services keep their verified order, the early default-password attempt is avoided until the Data mapping exists, and the media bind is created only after successful FBE decryption. Recovery never writes a KeyMint upgrade back to user data.
 
 The QTI support libraries and service identities are taken from the official Myron Global vendor image. Evolution X 17 compatibility is limited to accepting an existing fscrypt policy only when the kernel reports an exact byte-for-byte match; it does not replace policies or persist upgraded key blobs.
+
+Android 17 / HyperOS 4 metadata and user 0 decryption have been verified with the installed system release and security-patch values. The recovery still uses the rollback-resistant recovery header, but that value is never exposed to KeyMint during credential handling.
 
 ## Storage and flashing
 
@@ -50,6 +52,7 @@ The QTI support libraries and service identities are taken from the official Myr
 - Fastbootd resolves and labels the current UFS targets at runtime, so flashing `init_boot` does not depend on unstable `/dev/block/sd*` assignments.
 - The recovery fstab includes the optional `mi_product` logical partition used by newer HyperOS layouts.
 - The Myron theme includes stable language labels and the device-specific koi splash.
+- English, Simplified Chinese and Traditional Chinese include the `virtual_part_fs` message used by the virtual-partition file-system guard.
 
 ## Build
 

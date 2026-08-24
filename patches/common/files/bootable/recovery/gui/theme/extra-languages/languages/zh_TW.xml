@@ -153,6 +153,7 @@
 		<string name="wipe_complete">清除完成</string>
 		<string name="sel_part_wipe">選擇要清除的分割區：</string>
 		<string name="invalid_part_sel">無效的分割區</string>
+		<string name="virtual_part_fs">虛擬項目：檔案系統操作請選擇 Data</string>
 		<string name="format_data_hdr">格式化 Data 分割區</string>
 		<string name="format_data_btn">格式化 Data 分割區</string>
 		<string name="format_data_ptr1">格式化 Data 分割區將會清空您安裝的所有</string>

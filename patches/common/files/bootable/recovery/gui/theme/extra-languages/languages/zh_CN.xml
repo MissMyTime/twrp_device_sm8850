@@ -153,6 +153,7 @@
 		<string name="wipe_complete">清除完成</string>
 		<string name="sel_part_wipe">选择要清除的分区：</string>
 		<string name="invalid_part_sel">无效的分区</string>
+		<string name="virtual_part_fs">虚拟项目：文件系统操作请选择 Data</string>
 		<string name="format_data_hdr">格式化 Data 分区</string>
 		<string name="format_data_btn">格式化 Data 分区</string>
 		<string name="format_data_ptr1">格式化 Data 分区将会清空您安装的所有</string>

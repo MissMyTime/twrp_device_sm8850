@@ -153,6 +153,7 @@
 		<string name="wipe_complete">Wipe Complete</string>
 		<string name="sel_part_wipe">Select Partitions to Wipe:</string>
 		<string name="invalid_part_sel">Invalid partition selection</string>
+		<string name="virtual_part_fs">Virtual item: select Data for file-system operations</string>
 		<string name="format_data_hdr">Format Data</string>
 		<string name="format_data_btn">Format Data</string>
 		<string name="format_data_ptr1">Format Data will wipe all of your apps,</string>

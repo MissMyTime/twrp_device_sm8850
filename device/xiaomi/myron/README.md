@@ -1,11 +1,11 @@
 # Redmi K90 Pro Max / POCO F8 Ultra (myron)
 
-本设备树用于 Myron 的 TWRP 3.7.1 Android 16 构建，目标系统为 HyperOS 3 / Android 16，支持 FBE、动态分区和 Virtual A/B。
+本设备树用于 Myron 的 TWRP 3.7.1 构建，支持 HyperOS 3 / Android 16 与 HyperOS 4 / Android 17 的 FBE 环境、动态分区和 Virtual A/B。
 
 ## 当前状态
 
 - Recovery：独立 A/B recovery 分区，镜像不包含内核。
-- 解密：QTI KeyMint、NXP StrongBox/Weaver、Android 16 FBE。
+- 解密：QTI KeyMint、NXP StrongBox/Weaver、Android 16/17 FBE。
 - 存储：Data/Metadata 使用 F2FS，内部存储按 `/data/media` 处理。
 - 连接：ADB、MTP、ADB Sideload、WLAN。
 - 硬件：触摸、亮度、振动。
@@ -49,6 +49,13 @@
 - 修正 CPU 温度节点，EvoX 解密后按 ATS 偏移恢复 recovery 时间。
 - Fastbootd 菜单改用经回读验证的 BCB 请求。
 - Format Data 三态保护：`none` 正常允许；`merging` 禁止绕过；其他快照状态需“类原生／强制格式化”二次确认。
+
+## 2026-08-24 修复
+
+- 从当前槽位读取已安装系统的 Android 版本，并等待真实 platform/vendor 安全补丁属性就绪后重启 QTI KeyMint 与 Keystore2。
+- Android 17 / HyperOS 4 环境已验证 Metadata 与用户 0 解密成功；继续拒绝升级或写回 KeyMint 密钥，避免破坏系统 Synthetic Password 链。
+- Fastbootd 继续按当前 UFS 块设备动态建立标签，支持 `init_boot`；较新 HyperOS 使用的 `mi_product` 保持可选挂载。
+- 补充英文、简体中文和繁体中文的虚拟分区提示，日志导出不再显示 `virtual_part_fs` 资源缺失红字。
 
 ## 构建
 
