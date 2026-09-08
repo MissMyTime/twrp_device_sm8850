@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="28">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop stop-color="#0390fc"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="light">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="cut">
+      <rect x="1" y="1" width="98" height="26" rx="6"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#cut)">
+    <rect x="1" y="1" width="98" height="26" fill="url(#bg)"/>
+    <rect x="-40" y="1" width="30" height="26" fill="url(#light)" transform="skewX(-20)">
+      <animate attributeName="x" values="-40;140" dur="2.4s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <text x="50" y="19" text-anchor="middle" fill="#fff" font-size="14" font-weight="500" font-family="system-ui,Segoe UI,Arial">Feedback</text>
+</svg>
