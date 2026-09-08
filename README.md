@@ -7,7 +7,7 @@
 本仓库提供完整设备树、公共源码修改和按机型隔离的专属补丁。构建时只应用公共补丁与目标设备补丁，避免不同厂商、不同安全后端的解密和启动配置互相混用。
 自愿打赏 / Support me：
 爱发电：https://www.ifdian.net/a/MissMyTime
-Ko‑fi：https://ko‑fi.com/missmytime
+Ko‑fi：https://ko-fi.com/missmytime
 
 ## 支持设备
 
