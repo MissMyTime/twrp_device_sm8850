@@ -2,7 +2,7 @@
 
 > TWRP 3.7.1 / Android 16 device trees and source patches for recent Xiaomi and realme platforms
 
-[![Feedback](./.github/assets/discuss.svg)](https://github.com/MissMyTime/twrp_device_sm8850/issues)
+[![Feedback](./.github/assets/discuss‑en.svg)](https://github.com/MissMyTime/twrp_device_sm8850/issues)
 
 This repository provides complete device trees, shared source changes and isolated per-device patches. A build receives only the common patch set and the selected device set, preventing decryption and boot configurations from different vendors or security backends from being mixed.
 
