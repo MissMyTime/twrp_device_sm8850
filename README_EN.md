@@ -6,6 +6,11 @@
 
 This repository provides complete device trees, shared source changes and isolated per-device patches. A build receives only the common patch set and the selected device set, preventing decryption and boot configurations from different vendors or security backends from being mixed.
 
+## Support me
+If you find this project useful, you can support me:
+- Afdian(CN): https://www.ifdian.net/a/MissMyTime
+- Ko‑fi: https://ko-fi.com/missmytime
+
 [中文](./README.md)
 
 ## Supported devices
