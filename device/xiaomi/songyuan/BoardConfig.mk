@@ -43,8 +43,8 @@ BOARD_RECOVERY_MKBOOTIMG_ARGS := $(BOARD_MKBOOTIMG_ARGS)
 # created under; a recovery that claims a different identity makes the TA either
 # refuse the blob or irreversibly upgrade it inside the TEE.
 #
-# After every OTA, read the real values off the running system and update all
-# seven lines below before rebuilding, then delete
+# After an Android major release, read the real values off the running system
+# and update all seven lines below before rebuilding, then delete
 # out/target/product/songyuan/recovery/root/prop.default so it regenerates.
 #
 #   adb shell getprop ro.build.version.release
