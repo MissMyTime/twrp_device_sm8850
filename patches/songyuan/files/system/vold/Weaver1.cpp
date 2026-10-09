@@ -168,11 +168,28 @@ bool Weaver::WeaverVerify(const uint32_t slot, const void* weaver_key, std::vect
 	}
 
 	if (mAidlDevice != nullptr) {
+		// The binder wait above only guarantees that the service handle exists.
+		// On this device the first read after a cold boot can still come back
+		// before the HAL is able to serve it, which showed up as a failed first
+		// unlock that succeeded on the second try.  Retry the read with a short
+		// backoff, but only for transport-level failures: a definitive answer for
+		// a wrong key is returned straight away.
 		::aidl::android::hardware::weaver::WeaverReadResponse rep;
-		auto r = mAidlDevice->read(slot, key, &rep);
-		if (r.isOk() && rep.status == ::aidl::android::hardware::weaver::WeaverReadStatus::OK) {
-			*payload = rep.value;
-			return true;
+		for (int attempt = 0; attempt < 3; attempt++) {
+			auto r = mAidlDevice->read(slot, key, &rep);
+			if (r.isOk() && rep.status == ::aidl::android::hardware::weaver::WeaverReadStatus::OK) {
+				*payload = rep.value;
+				return true;
+			}
+			const bool retryable = !r.isOk() ||
+					rep.status == ::aidl::android::hardware::weaver::WeaverReadStatus::FAILED;
+			if (!retryable) {
+				LOG(ERROR) << "Weaver AIDL read rejected, status=" << static_cast<int>(rep.status);
+				return false;
+			}
+			LOG(ERROR) << "Weaver AIDL read not ready, attempt " << (attempt + 1)
+				   << " status=" << static_cast<int>(rep.status);
+			usleep(250000);
 		}
 		return false;
 	}
