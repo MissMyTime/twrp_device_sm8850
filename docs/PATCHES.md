@@ -47,6 +47,10 @@ Myron-only koi splash resources.
 
 ### `patches/songyuan/files/`
 
+The Songyuan set also carries the recovery boot-timing fix: `device/xiaomi/songyuan/sepolicy/recovery.te`
+grants `init` the `getattr` it needs on the DRI character device, so the `wait /dev/dri/card0`
+in `init.rc` completes immediately instead of retrying until its 5 s timeout.
+
 The exact source set used by the verified K100PM build. It contains Songyuan-only FBE preparation, QTI KeyMint upgrade-write protection, Thales Weaver handling, MTP/Fastbootd guards, touch/navigation UI and input force-feedback haptics. Its `Decrypt.cpp`, `KeyStorage.cpp` and `Weaver1.cpp` must not be copied to another device set.
 
 ### `patches/neo8/patches/system_vold/key_storage_recovery_safety.patch`

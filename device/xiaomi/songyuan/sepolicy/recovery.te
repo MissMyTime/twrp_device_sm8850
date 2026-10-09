@@ -16,3 +16,12 @@ allow ueventd vfat:file { getattr map open read };
 # ramdisk.  Without the binder call permission its BootControl lookup fails
 # even though the service itself is running.
 binder_call(fastbootd, recovery)
+
+# init.rc runs `wait /dev/dri/card0` before it starts the recovery service so the
+# display is up first.  ueventd.rc only assigns owner and mode to /dev/dri/*, so
+# card0 keeps the generic device label, and the base policy grants init
+# `device:file` but nothing for chr_file.  The existence check inside `wait` needs
+# getattr, so every probe was denied and it kept retrying until the 5 s timeout,
+# holding the recovery service back by a flat 5 seconds.  Allow the getattr so the
+# wait succeeds on its first probe.
+allow init device:chr_file getattr;

@@ -7,6 +7,8 @@ This directory contains the source changes used by the verified Songyuan recover
 - Songyuan FBE preparation and credential-page selection.
 - QTI KeyMint upgrade-write protection with the stock OS version and patch level.
 - Thales Weaver timeout handling.
+- Recovery boot timing: the SELinux permission that let `wait /dev/dri/card0`
+  complete, removing a flat 5 s stall before the recovery service was started.
 - K100PM input force-feedback haptics.
 - Songyuan MTP/ADB composite mode and Fastbootd transition guards.
 - Touch, navigation, splash and recovery GUI behavior verified on the 1200 x 2608 panel.
