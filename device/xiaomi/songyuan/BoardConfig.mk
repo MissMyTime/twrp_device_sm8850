@@ -38,16 +38,28 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 BOARD_RECOVERY_MKBOOTIMG_ARGS := $(BOARD_MKBOOTIMG_ARGS)
-# Match the installed K100PM OS3.0.306.0.WGNCNXM environment exactly. A
-# recovery header/build spoof can make QTI KeyMint irreversibly upgrade
-# Synthetic Password key blobs.
-BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 16.0.0
-BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-07-01
-BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.os_version:16.0.0
-BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.security_patch:2026-07-01
-BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 16
-BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-07-01
-VENDOR_SECURITY_PATCH := 2026-08-01
+# The recovery identity must match the installed system. QTI KeyMint seals the
+# Synthetic Password key blob against the OS version and patch level it was
+# created under; a recovery that claims a different identity makes the TA either
+# refuse the blob or irreversibly upgrade it inside the TEE.
+#
+# After every OTA, read the real values off the running system and update all
+# seven lines below before rebuilding, then delete
+# out/target/product/songyuan/recovery/root/prop.default so it regenerates.
+#
+#   adb shell getprop ro.build.version.release
+#   adb shell getprop ro.build.version.security_patch
+#   adb shell getprop ro.vendor.build.security_patch
+#
+# Safety: recovery vold must never persist an upgraded blob (KeyStorage.cpp
+# BeginKeystoreOp keeps rejecting them).
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 17.0.0
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-09-01
+BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.os_version:17.0.0
+BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.security_patch:2026-09-01
+BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 17
+BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-09-01
+VENDOR_SECURITY_PATCH := 2026-09-01
 BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_USES_RECOVERY_AS_BOOT := false

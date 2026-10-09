@@ -51,6 +51,11 @@ The Songyuan set also carries the recovery boot-timing fix: `device/xiaomi/songy
 grants `init` the `getattr` it needs on the DRI character device, so the `wait /dev/dri/card0`
 in `init.rc` completes immediately instead of retrying until its 5 s timeout.
 
+The device set also pins the recovery identity. `BoardConfig.mk` sets the boot header OS
+version and patch level plus the matching AVB props, and `VENDOR_SECURITY_PATCH`, to the
+values the installed system reports. QTI KeyMint seals the Synthetic Password key blob
+against that identity, so these values have to be refreshed after every OTA.
+
 The exact source set used by the verified K100PM build. It contains Songyuan-only FBE preparation, QTI KeyMint upgrade-write protection, Thales Weaver handling, MTP/Fastbootd guards, touch/navigation UI and input force-feedback haptics. Its `Decrypt.cpp`, `KeyStorage.cpp` and `Weaver1.cpp` must not be copied to another device set.
 
 ### `patches/neo8/patches/system_vold/key_storage_recovery_safety.patch`
