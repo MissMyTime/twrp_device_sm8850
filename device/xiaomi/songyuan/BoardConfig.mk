@@ -38,28 +38,36 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 BOARD_RECOVERY_MKBOOTIMG_ARGS := $(BOARD_MKBOOTIMG_ARGS)
-# The recovery identity must match the installed system. QTI KeyMint seals the
-# Synthetic Password key blob against the OS version and patch level it was
-# created under; a recovery that claims a different identity makes the TA either
-# refuse the blob or irreversibly upgrade it inside the TEE.
+# These values MUST EXACTLY EQUAL the identity of the installed system, never
+# exceed it.  QTI KeyMint binds every keyblob to (release, os_patchlevel,
+# vendor_patchlevel) read from the properties below; a keyblob sealed for a newer
+# identity than the running system is rejected with INVALID_KEY_BLOB (-33), and a
+# recovery that claims a NEWER identity than a keyblob was sealed for can make the
+# TA irreversibly upgrade that keyblob inside the TEE.
 #
-# After an Android major release, read the real values off the running system
-# and update all seven lines below before rebuilding, then delete
+# Verified on device 2026-10-08:
+#   OS3 (16 / 2026-07-01 / 2026-08-01) -> TWRP decrypts
+#   OS4 (17 / 2026-09-01 / 2026-09-01) -> TWRP decrypts   <-- current
+# After every OTA: read the real values off the running system and update all
+# seven lines below before rebuilding, then delete
 # out/target/product/songyuan/recovery/root/prop.default so it regenerates.
 #
 #   adb shell getprop ro.build.version.release
 #   adb shell getprop ro.build.version.security_patch
 #   adb shell getprop ro.vendor.build.security_patch
 #
-# Safety: recovery vold must never persist an upgraded blob (KeyStorage.cpp
-# BeginKeystoreOp keeps rejecting them).
+# Safety: recovery vold must never persist an upgraded blob
+# (KeyStorage.cpp BeginKeystoreOp / DeferredCommitKeystoreKeys stay as-is).
 BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 17.0.0
-BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-09-01
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-10-01
 BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.os_version:17.0.0
-BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.security_patch:2026-09-01
+BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.security_patch:2026-10-01
 BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 17
-BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-09-01
-VENDOR_SECURITY_PATCH := 2026-09-01
+BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-10-01
+VENDOR_SECURITY_PATCH := 2026-10-01
+# These are a FALLBACK only.  songyuan-security-start pins the identity from
+# the installed system before KeyMint's first start, so an OTA no longer
+# requires a rebuild here.
 BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_USES_RECOVERY_AS_BOOT := false

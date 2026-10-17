@@ -328,13 +328,13 @@ fi
 songyuan_board="$REPO_ROOT/device/xiaomi/songyuan/BoardConfig.mk"
 grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 17\.0\.0$' \
     "$songyuan_board" || fail "Songyuan recovery header must use Android 17.0.0"
-grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-09-01$' \
+grep -q '^BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2026-10-01$' \
     "$songyuan_board" || fail "Songyuan recovery header security patch is incorrect"
 grep -q '^BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 17$' \
     "$songyuan_board" || fail "Songyuan recovery release property is incorrect"
-grep -q '^BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-09-01$' \
+grep -q '^BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2026-10-01$' \
     "$songyuan_board" || fail "Songyuan recovery security patch is incorrect"
-grep -q '^VENDOR_SECURITY_PATCH := 2026-09-01$' \
+grep -q '^VENDOR_SECURITY_PATCH := 2026-10-01$' \
     "$songyuan_board" || fail "Songyuan vendor security patch is incorrect"
 assert_no_match \
     '99\.87\.36|2099-12-31|twrp\.keymint\.|neo8|nezha|RE6402L1' \

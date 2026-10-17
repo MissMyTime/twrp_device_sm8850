@@ -20,6 +20,11 @@ on fs
     # peach_v2 driver loops on ipa_fws.mdt, times out MHI power-on and can
     # eventually trigger a platform reboot.
     write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
+    # vold KeyStorage reaches keystore2 through the framework
+    # servicemanager; this recovery never started one, so
+    # AServiceManager_waitForService() blocked forever inside
+    # fscrypt_mount_metadata_encrypted() and the UI never came up.
+    start servicemanager
     chmod 0660 /dev/qseecom
     chown system drmrpc /dev/qseecom
     chmod 0664 /dev/ion
@@ -37,18 +42,31 @@ on fs
     setprop vendor.gatekeeper.disable_spu true
     setprop vendor.gatekeeper.is_security_level_spu 0
     # qseecomd must see the UFS bootdevice link during its one-time RPMB
-    # initialization. KeyMint starts only after qseecomd has settled and uses
-    # the real Android 16 K100PM build properties baked into this recovery.
-    # No runtime property override is permitted.
+    # initialization.  KeyMint takes its environment from the HAL's first start
+    # and a later restart does not change what the TA already holds, so the
+    # identity has to be published BEFORE this start.  Read it from the installed
+    # system first; the values baked into the recovery are only a fallback.
     start vendor.boot-qti
     start vendor.qseecomd
     wait_for_prop init.svc.vendor.qseecomd running
     exec -- /system/bin/sleep 1
-    start vendor.keymint
+
+    # KeyMint is NOT started here.  It takes its environment from the HAL's first
+    # start and a later restart does not change what the TA already holds, so it is
+    # started by songyuan-security-start after that script has pinned the identity
+    # from the installed system.  Starting it here would lock in the baked values
+    # and make every OTA require a recovery rebuild.
 
 on boot
     # Keep idle recovery thermals under control. TWRP switches this property to
     # performance only around intensive operations.
+    #
+    # recovery.perf.mode defaults to 0, so the "on property:recovery.perf.mode=0"
+    # block below (which selects the schedutil governor) would never fire on a
+    # cold boot and the CPUs stay at whatever the bootloader left -- measured as
+    # the `performance` governor, i.e. pinned high and running hot in recovery.
+    # Toggle the property once so init's property trigger actually runs.
+    setprop recovery.perf.mode 1
     setprop recovery.perf.mode 0
 
     # USB ADB/configfs defaults are established during fs by init.rc and
@@ -73,6 +91,13 @@ on property:recovery.perf.mode=1
     write /sys/devices/system/cpu/cpufreq/policy6/scaling_governor performance
 
 on property:twrp.modules.loaded=true
+    # CPUpower: `on boot` runs before the cpufreq sysfs nodes exist, so the
+    # writes in the "on property:recovery.perf.mode=0" block silently fail on a
+    # cold boot and the CPUs stay pinned at whatever the bootloader left
+    # (measured: the `performance` governor, i.e. hot and wasteful in recovery).
+    # modules.loaded fires late enough that cpufreq is guaranteed present.
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy6/scaling_governor schedutil
     setprop vendor.touch.recovery.firmware_ready 0
     start songyuan-touch-fw-load
     start songyuan-haptics-ready
@@ -92,12 +117,15 @@ on property:twrp.modules.loaded=true
     chmod 0444 /dev/dma_heap/system
     setprop twrp.songyuan.modules_ready 1
     start vendor.health-default
+    # Fallback latch: servicemanager.ready is never published in this
+    # recovery, so sys.boot_completed never fires and the security chain
+    # would wait forever. Start it here as well; the service is oneshot
+    # and disabled, so a later start is a no-op.
+    start songyuan-security-start
 
 on property:servicemanager.ready=true
     setprop sys.boot_completed 1
 
-on property:sys.boot_completed=1
-    start songyuan-security-start
 
 on property:ro.twrp.fastbootd=1
     stop songyuan-usb-role-recover
@@ -109,6 +137,15 @@ on property:ro.twrp.fastbootd=1
 # Mount this device's active-slot modem firmware read-only, then start only the
 # stock K100PM STM/Thales eSE and Weaver chain. This is a boot-time initializer,
 # not a password-attempt hook.
+# Reads the identity off the installed system and publishes it before
+# KeyMint starts.  Runs once, then exits.
+service songyuan-pin-identity /system/bin/songyuan-pin-identity.sh
+    class main
+    oneshot
+    disabled
+    user root
+    seclabel u:r:recovery:s0
+
 service songyuan-security-start /system/bin/songyuan-security-start.sh
     disabled
     oneshot
@@ -141,4 +178,15 @@ service songyuan-usb-role-recover /system/bin/songyuan-usb-role-recover.sh
     disabled
     user root
     group root shell system usb
+    seclabel u:r:recovery:s0
+
+# Framework servicemanager: keystore2 publishes its AIDL service here and
+# vold's KeyStorage waits for it when it reads the metadata key. Without it
+# the recovery hangs in waitForService() before the GUI event loop starts.
+service servicemanager /system/bin/servicemanager
+    class core
+    user system
+    group system readproc
+    disabled
+    oneshot
     seclabel u:r:recovery:s0
