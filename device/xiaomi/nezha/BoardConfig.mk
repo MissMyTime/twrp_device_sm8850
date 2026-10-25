@@ -231,11 +231,16 @@ TW_SKIP_SECONDARY_FBE_USERS := true
 # -----------------------------------------------------------------------------
 # 10. Recovery-side security patch compatibility
 # -----------------------------------------------------------------------------
-PLATFORM_VERSION := 99.87.36
-PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
-PLATFORM_SECURITY_PATCH := 2099-12-31
-VENDOR_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
-BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
+# PLATFORM_VERSION is readonly in the current AOSP 16 tree. Keep the spoofing
+# scoped to recovery image header, AVB footer and recovery build.prop instead.
+BOARD_RECOVERY_MKBOOTIMG_ARGS := $(BOARD_MKBOOTIMG_ARGS)
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_version 99.87.36
+BOARD_RECOVERY_MKBOOTIMG_ARGS += --os_patch_level 2099-12-31
+BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.os_version:99.87.36
+BOARD_AVB_RECOVERY_ADD_HASH_FOOTER_ARGS += --prop com.android.build.boot.security_patch:2099-12-31
+BOARD_RECOVERY_BUILD_PROP_VERSION_RELEASE := 99.87.36
+BOARD_RECOVERY_BUILD_PROP_SECURITY_PATCH := 2099-12-31
+VENDOR_SECURITY_PATCH := 2099-12-31
 
 # -----------------------------------------------------------------------------
 # 11. Recovery base
@@ -266,6 +271,7 @@ TARGET_USES_VULKAN := true
 TARGET_USES_QCOM_SPR := true
 
 TW_THEME := portrait_hdpi
+TW_EXCLUDE_NANO := true
 TW_FRAMERATE := 120
 TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
 TW_MAX_BRIGHTNESS := 16383
@@ -377,3 +383,7 @@ TWRP_INCLUDE_LOGCAT := true
 TARGET_RECOVERY_DEVICE_MODULES += debuggerd strace
 RECOVERY_BINARY_SOURCE_FILES += $(TARGET_OUT_EXECUTABLES)/debuggerd
 RECOVERY_BINARY_SOURCE_FILES += $(TARGET_OUT_EXECUTABLES)/strace
+
+# TWRP common board config: exports TW_THEME and the other TW_ variables
+# that Soong reads.  Without it the theme selection cannot be resolved.
+include vendor/twrp/config/BoardConfigTWRP.mk
