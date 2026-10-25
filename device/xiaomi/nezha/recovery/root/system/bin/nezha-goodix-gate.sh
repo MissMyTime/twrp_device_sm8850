@@ -4,9 +4,14 @@
 # The SKU spread is wider than any route table can track: normal_590, leica_597
 # and global_5190 all exist, and a unit can report a hwversion that no branch
 # lists.  The route therefore only orders the two backends; which one is really
-# present is decided by bringing up its secure-element chain and seeing whether
-# it survives.  A backend that dies is abandoned within a few seconds and the
-# other one is tried, so an unknown SKU still reaches decryption.
+# present is decided by bringing up its secure-element chain and confirming the
+# Weaver service stays up.
+#
+# An earlier version probed the chip and treated "no absent-chip report" as
+# "Goodix present", which sent GL / 5.19.x units to Goodix even though their
+# stock system runs Thales over eSE1.  Absence of evidence is not evidence of
+# eSE2: a backend now has to prove itself, and the other one is tried when it
+# cannot.
 #
 # normal_590 and global_5190 are Thales routes (eSE1 over OMAPI).
 # leica_597 is a Goodix route (eSE2).
@@ -96,6 +101,60 @@ prepare_tmp_state() {
     rm -rf /tmp/SELog* /tmp/goodix* /tmp/nezha-thales 2>/dev/null || true
 }
 
+# TWRP loads /vendor/lib/modules/modules.load after the first stage; the safe
+# modules lists stm_st54se_gpio.ko, which the Thales eSE needs.  Wait for that
+# pass instead of racing it.
+wait_modules_loaded() {
+    i=0
+    while [ "$i" -lt 20 ]; do
+        [ "$(getprop twrp.modules.loaded)" = "true" ] && return 0
+        sleep 1
+        i=$((i + 1))
+    done
+    log_msg "modules did not report loaded; continuing"
+    return 1
+}
+
+ensure_st54_module() {
+    if grep -q '^stm_st54se' /proc/modules 2>/dev/null; then
+        log_msg "stm_st54se already loaded"
+        return 0
+    fi
+    for m in /vendor/lib/modules/stm_st54se_gpio.ko \
+             /vendor_dlkm/lib/modules/stm_st54se_gpio.ko; do
+        if [ -f "$m" ]; then
+            if insmod "$m" 2>/dev/null; then
+                log_msg "insmod $m"
+                return 0
+            fi
+        fi
+    done
+    log_msg "stm_st54se_gpio.ko not available"
+    return 1
+}
+
+# The QTI secure-element HAL and OMAPI are early_hal, so they can come up before
+# the ST54 GPIO driver exists; their transport then stays dead for the rest of
+# the boot.  Restarting just these two is safe: qseecomd and minkdaemon own the
+# Mink object handles and are left alone.
+refresh_thales_transport() {
+    ensure_st54_module
+    stop se_omapi
+    stop vendor.secure_element
+    sleep 1
+    start vendor.secure_element
+    if ! wait_stable_running vendor.secure_element 2 8; then
+        log_msg "vendor.secure_element did not stay running after refresh"
+        return 1
+    fi
+    start se_omapi
+    if ! wait_stable_running se_omapi 2 8; then
+        log_msg "se_omapi did not stay running after refresh"
+        return 1
+    fi
+    return 0
+}
+
 weaver_service_for() {
     if [ "$1" = "thales" ]; then
         echo thales_weaver_hal_service
@@ -112,23 +171,12 @@ weaver_process_for() {
     fi
 }
 
-# Bring up the secure-element side of one backend.  This is the part that tells
-# us whether the hardware is really there: an absent eSE makes the HAL exit or
-# the registration fail, and the following Weaver start then aborts.
+# Bring up the secure-element side of one backend.  This is what tells us
+# whether the hardware is really there: an absent eSE makes the HAL exit or the
+# registration fail, and the Weaver start after it then aborts.
 start_secure_element_chain() {
     if [ "$1" = "thales" ]; then
-        # Thales reaches eSE1 through OMAPI.  Goodix eSE2 must not be started:
-        # it is absent on these units and its HAL aborts with BAD_TYPE.
-        ensure_service_running vendor.secure_element
-        if ! wait_stable_running vendor.secure_element 2 8; then
-            log_msg "vendor.secure_element did not stay running"
-            return 1
-        fi
-        ensure_service_running se_omapi
-        if ! wait_stable_running se_omapi 2 8; then
-            log_msg "se_omapi did not stay running"
-            return 1
-        fi
+        refresh_thales_transport || return 1
     else
         start secure_element_hal_service
         if ! wait_stable_running secure_element_hal_service 2 8; then
@@ -147,7 +195,7 @@ try_backend() {
     setprop twrp.nezha.weaver_backend "$candidate"
 
     if ! start_secure_element_chain "$candidate"; then
-        setprop twrp.nezha.goodix_gate_error "${candidate}_secure_element_not_ready"
+        setprop twrp.nezha.last_backend_error "${candidate}_secure_element_not_ready"
         return 1
     fi
 
@@ -158,7 +206,7 @@ try_backend() {
         log_msg "$service did not survive the probe"
         stop "$service"
         killall "$process" 2>/dev/null || true
-        setprop twrp.nezha.goodix_gate_error "${candidate}_weaver_not_stable"
+        setprop twrp.nezha.last_backend_error "${candidate}_weaver_not_stable"
         return 1
     fi
 
@@ -172,12 +220,13 @@ try_backend() {
     log_msg "$service dropped after the probe"
     stop "$service"
     killall "$process" 2>/dev/null || true
-    setprop twrp.nezha.goodix_gate_error "${candidate}_weaver_dropped"
+    setprop twrp.nezha.last_backend_error "${candidate}_weaver_dropped"
     return 1
 }
 
 setprop twrp.nezha.goodix_gate_started 1
 setprop twrp.nezha.goodix_gate_error ""
+setprop twrp.nezha.last_backend_error ""
 setprop twrp.nezha.weaver_ready 0
 prepare_tmp_state
 detect_route
@@ -196,6 +245,8 @@ reset_weaver_services
 ensure_service_running vendor.qseecomd
 ensure_service_running vendor.minkdaemon
 
+wait_modules_loaded
+
 route="$(getprop twrp.nezha.crypto_route)"
 first=thales
 case "$route" in
@@ -213,7 +264,10 @@ esac
 # decrypt retry path does not pay for the probe again.
 known="$(getprop twrp.nezha.weaver_backend_ok)"
 case "$known" in
-    thales|goodix) first="$known"; if [ "$known" = "thales" ]; then second=goodix; else second=thales; fi ;;
+    thales|goodix)
+        first="$known"
+        if [ "$known" = "thales" ]; then second=goodix; else second=thales; fi
+        ;;
 esac
 
 tried=""
@@ -224,10 +278,12 @@ for candidate in "$first" "$second"; do
         setprop twrp.nezha.weaver_backend_ok "$candidate"
         exit 0
     fi
-    log_msg "$candidate backend failed; continuing"
-    setprop twrp.nezha.goodix_gate_error ""
+    log_msg "$candidate backend failed: $(getprop twrp.nezha.last_backend_error)"
 done
 
+# Only the terminal condition is published through goodix_gate_error; the
+# per-backend failures stay in last_backend_error so twrp-pre-decrypt.sh does
+# not restart this gate while both backends are still being probed.
 setprop twrp.nezha.weaver_ready 0
 setprop twrp.nezha.goodix_gate_error "no_weaver_backend_stable"
 log_msg "no Weaver backend stabilised"
