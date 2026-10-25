@@ -9,3 +9,13 @@ service goodix_weaver_hal_service /sbin/android.hardware.weaver-service-goodix-r
     setenv SE_LOG_PATH /tmp/nezha-goodix/logs
     disabled
     seclabel u:r:recovery:s0
+
+service thales_weaver_hal_service /sbin/android.hardware.weaver-service-thales-recovery
+    class hal
+    user root
+    group root system drmrpc
+    capabilities WAKE_ALARM
+    setenv LD_LIBRARY_PATH /sbin/lib64:/vendor/lib64:/vendor/lib64/hw:/system/lib64:/odm/lib64
+    setenv TMPDIR /tmp/nezha-thales
+    disabled
+    seclabel u:r:recovery:s0
